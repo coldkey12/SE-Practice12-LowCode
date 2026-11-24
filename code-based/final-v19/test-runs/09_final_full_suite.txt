@@ -1,0 +1,33 @@
+
+ RUN  v2.1.9 /home/project
+
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T01: touching after existing booking (660–720) should be Available
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T02: start equals now (540–570) should be Unavailable with start-after-current reason
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T03: zero duration (720–720) should be Unavailable with interval reason
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T04: reversed interval (750–720) should be Unavailable with interval reason
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T05: end past day end (1380–1441) should be Unavailable with interval reason
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T06: exactly 120 minutes (720–840) should be Available
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T07: 121 minutes (720–841) should be Unavailable with 120-minute reason
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T08: touching before existing booking (570–600) should be Available
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T09: partial overlap (630–690) should be Unavailable with overlap reason
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T10: contains existing booking (570–690) should be Unavailable with overlap reason
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T11: inside existing booking (615–645) should be Unavailable with overlap reason
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T12: identical interval (600–660) should be Unavailable with overlap reason
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T13: blocked room (660–720) should be Unavailable with blocked reason
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T14: no bookings (630–690) should be Available
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T15: bookings and room are unchanged after repeated Available and Unavailable checks on the same data (AC5)
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T16: ends exactly at day end (1380–1440) should be Available
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T17: overlaps only second booking (690–750) should be Unavailable with overlap reason
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T18: starts one minute after now (541–571) should be Available
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T19: overlap belongs to a different room (630–690) should be Available
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T20: null room (660–720) should be Unavailable with a room-selection reason
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T21: real sample data Newton Lab 220 (660–720) should be Available with SAMPLE_BOOKINGS unchanged
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T22: real sample data Curie Auditorium blocked (660–720) should be Unavailable with blocked reason and data unchanged
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T23 (BUG-A regression): endpoint touches are Available, one-minute overlaps are Unavailable, data unchanged
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T24 (BUG-B regression): checking availability does not reorder or change the bookings array
+
+ Test Files  1 passed (1)
+      Tests  24 passed (24)
+   Start at  19:20:30
+   Duration  1.68s (transform 65ms, setup 0ms, collect 75ms, tests 6ms, environment 0ms, prepare 193ms)
+

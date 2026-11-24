@@ -1,0 +1,44 @@
+# Safe runtime checks against the LOCAL Budibase instance only (2026-11-24 18:41)
+
+## 1. Is the service reachable only from this machine?
+80/tcp -> 127.0.0.1:10000
+
+LAN IP: 10.212.1.152
+curl http://10.212.1.152:10000/builder -> 000 (000 = connection refused)
+
+## 2. Read rows WITHOUT a session (anonymous)
+GET/POST /api/ta_3c7f5472e2924beaae0aac26383b52c3/rows
+Redirecting to /.
+GET/POST /api/public/v1/tables/ta_3c7f5472e2924beaae0aac26383b52c3/rows/search
+Redirecting to /.
+Redirecting to /.
+
+## 3. Write rows WITHOUT a session
+Redirecting to /.
+
+## Status codes (anonymous)
+GET  /api/ta_3c7f5472e2924beaae0aac26383b52c3/rows -> 302 location=http://127.0.0.1:10000/
+POST /api/ta_3c7f5472e2924beaae0aac26383b52c3/rows (write) -> 302 location=http://127.0.0.1:10000/
+Result: no row data returned and no write accepted without a session (redirect to login).
+
+## 4. Output handling / XSS (stored value -> Text component with Markdown)
+Temporary row added through the API with an admin session (booking_id XSS-TEST, 2026-12-02 09:00-10:00,
+title = <img src=x onerror="window.__xss=1"><b>bold</b>), then a check for 2026-12-02 09:30 / 60 min.
+Observed result paragraph HTML: <p>Unavailable: overlaps with "<img src="x">bold" (09:00–10:00).</p>
+- onerror handler removed by Budibase's sanitizer, window.__xss stayed undefined, no dialog -> no script execution.
+- BUT the <img> tag itself was rendered -> HTML injection is possible (e.g. an external image / tracking pixel or
+  misleading markup) whenever a booking title contains HTML. Severity: low-medium. Fix: escape the title in the binding.
+Note: the API accepted a row write from the logged-in admin session even though the screen's table has
+Add/Edit/Delete rows switched off -> hiding UI controls is not an access control; table permissions are.
+Cleanup: XSS-TEST row deleted (HTTP 200); table back to B1, B2, B3 with the original values.
+
+## 5. After the fix (binding v2 escapes the title)
+Same temporary row, same check: <p>Unavailable: overlaps with "&lt;img src=x onerror="window.__xss=1"&gt;&lt;b&gt;bold&lt;/b&gt;" (09:00–10:00).</p>
+-> shown as text, no element injected, window.__xss undefined. Row deleted again (HTTP 200); table = B1, B2, B3.
+Regression after the fix: T1-T8 8/8 pass + extra AC6 check (empty duration -> DURATION_NOT_NUMBER).
+
+## 6. Published (prod) app
+Defect found: after Publish, the prod Bookings table was EMPTY (Budibase keeps Dev and Prod rows apart).
+T2 on the published app returned 'Available ... AVAILABLE' (wrong, fails open). Fixed with Data tables -> Prod -> 'Seed from Dev'; T1-T8 then 8/8 on the published app.
+Anonymous GET of the published app page: 200 -> 
+Anonymous row read on prod app id: 401 -> 

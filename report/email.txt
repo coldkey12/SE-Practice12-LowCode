@@ -1,0 +1,30 @@
+To: b.azimkhanov@kbtu.kz
+Subject: AI-Driven Software Engineering Practice #12, Don Vladimir, 24B030295
+
+Hello,
+
+Please find my Practice #12 work (Compare code-based and low-code solutions: Smart Campus Room Availability Checker).
+
+Class time and day of week: Tuesday, 24 November 2026, 16:00–19:00
+AI tool, version, model: Bolt.new — Bolt Agent, "Standard" mode (build mode for the implementation and fix prompts, Plan mode for the comparison/review prompt), Free plan; Bolt does not show the underlying model name
+Project link (live demo, Bolt Publish): https://smart-campus-room-ch-0k2r.bolt.host/
+Bolt project: https://bolt.new/~/sb1-kqaeymwj (baseline = Version 17, first AI version = V18, final = V19)
+Low-code platform: Budibase Community 4.1.0 (free, self-hosted in Docker on my laptop, localhost only)
+GitHub repository (all source code, Budibase export, report, screenshots, prompts and logs): https://github.com/coldkey12/SE-Practice12-LowCode
+
+Attachments:
+1. Practice12_Don_Vladimir_24B030295.pdf — the report: shared requirement/acceptance-criteria sheet, eight-case test table with expected and observed outcomes, completed comparison matrix and recommendation, security checklist, AI-use reflection.
+2. Screenshots of both implementations and their test results (code-based T2/T7 live, low-code T2, published low-code app before/after the data fix, XSS check before/after).
+
+Summary:
+- Same contract for both: one user story, AC1–AC6 unchanged, inputs/outputs with reason codes and messages, 3 fictional bookings, T1–T8 prepared before implementation.
+- Code-based (Bolt): the first AI version passed 41/41 unit tests but only 7/8 in the running UI (OVERLAP labelled "Invalid input") and ignored the date. After one fix prompt: 45/45 unit tests and 8/8 in the preview and on the live site. One minor defect left open (end label "24:30" after midnight).
+- Low-code (Budibase): 8/8 on the first run in the preview. The security check found HTML injection through the Markdown text (fixed by escaping), and the published app answered T2 "Available" because Dev and Prod data are separate (fail-open; fixed by seeding Prod). After the fixes: 8/8.
+- Measured effort: about 12 min code-based vs about 23 min low-code (shared contract not counted).
+- Recommendation: keep the code-based solution for this scenario; use low-code only for internal prototypes with Prod-data seeding and server-side permissions as mandatory steps.
+- Clearly labelled: the low-code app runs only on my laptop (no public link; export included in the repository); its tests are UI-only.
+
+Note: the submission slide's example says "Practice #13", but all the other slides say Practice #12, so I used #12.
+
+Best regards,
+Don Vladimir, 24B030295

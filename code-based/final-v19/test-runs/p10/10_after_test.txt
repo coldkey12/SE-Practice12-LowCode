@@ -1,0 +1,15 @@
+
+> vite-react-typescript-starter@0.0.0 test
+> vitest run
+
+
+ RUN  v2.1.9 /home/project
+
+ ✓ src/lib/availability.test.ts (26 tests) 6ms
+
+ Test Files  1 passed (1)
+      Tests  26 passed (26)
+   Start at  18:49:26
+   Duration  2.36s (transform 136ms, setup 0ms, collect 150ms, tests 6ms, environment 0ms, prepare 247ms)
+
+exit code: 0

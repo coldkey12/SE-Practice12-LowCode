@@ -1,0 +1,9 @@
+I tested Version 18 in the running app. Unit tests pass, but I found three defects. Fix only these, keep everything else unchanged, no new dependencies:
+
+D1 (UI): an OVERLAP result is labelled "Invalid input". The verdict must be: AVAILABLE -> "Available"; ROOM_BLOCKED and OVERLAP -> "Unavailable"; START_REQUIRED, START_IN_PAST and the three DURATION_* codes -> "Invalid input". Move this mapping into a pure function in src/lib/contract so it can be unit-tested, and use it in the UI.
+
+D2 (rules): checkContract compares only the time of day and ignores the date. Start 2026-12-05T12:30 for 60 min returns OVERLAP with "Study group", but that booking is on 2026-12-01. Compare full local date-times (date + time) so only real overlaps count; an interval that crosses midnight must also work.
+
+D3 (UI): the line "Requested: 2026-12-01 13:00, 13:00 onward." hides the end time. Show "Requested: <date> <start>–<end>".
+
+Add regression tests: 2026-12-05T12:30 + 60 -> AVAILABLE; 2026-12-01T23:30 + 60 -> AVAILABLE; 2026-12-01T16:00 + 60 -> OVERLAP (Robotics club); and the verdict mapping for all 8 reason codes. Then run npm test, npm run lint, npm run typecheck, npm run build and paste the real output.

@@ -1,0 +1,27 @@
+[Prompt as typed] Implement the attached Practice #12 contract exactly as written (the attachment is the full prompt).
+[Attachment] = P1_implementation_prompt.txt
+[Bolt answer, Standard mode, Build (Plan off), Version 18 at Nov 24 6:59 PM]
+
+I'll implement the Practice #12 contract: four new files under a contract folder, a rewritten main screen, and the real check runs. First, the package scripts.
+(files read)
+All four contract files plus the rewritten main screen are going in now.
+(actions taken)
+Now the UI — presentation only, all rules stay in the contract module.
+(actions taken)
+All files are in place. Now running the four checks and capturing the real output.
+(commands executed)
+Lint found an unused helper — removing it and re-running.
+(actions taken)
+The Practice #12 contract is implemented and all four checks pass with real runs. The app's main screen is now the contract checker: a start date-time picker, a duration field (1–120), a "Room blocked" switch, a Check button, and a result card showing the verdict, reason code, and the contract's exact message, plus the room's fictional bookings list. Booking rules live only in the new contract module — the UI just displays results — and the previous availability module and its 26 tests are untouched.
+
+Real terminal output:
+
+npm test — 2 files, 41 passed (41): availability.test.ts (26), contract.test.ts (15) — includes T1–T8 (T8 deep-compares bookings before/after T1–T7) plus 7 edge tests.
+
+npm run lint — clean after one fix: eslint initially flagged an unused helper in the new screen, which I removed; second run passed with no errors.
+
+npm run typecheck — no errors.
+
+npm run build — succeeded (✓ built in 2.05s). One non-blocking warning: caniuse-lite is outdated (a browser-data table used by the build tool, not a code problem); fixing it would mean updating dependencies, which you excluded, so I left it as is.
+
+Limitations: checks use the real clock, so T1/T7-type results depend on when you click (bookings are on 2026-12-01); no booking is ever created or modified; no login or persistence — the three bookings are frozen fictional data.

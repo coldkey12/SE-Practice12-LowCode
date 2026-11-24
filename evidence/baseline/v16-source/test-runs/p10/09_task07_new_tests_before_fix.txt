@@ -1,0 +1,52 @@
+
+> vite-react-typescript-starter@0.0.0 test
+> vitest run
+
+
+ RUN  v2.1.9 /home/project
+
+ ❯ src/lib/availability.test.ts (26 tests | 2 failed) 13ms
+   × checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T25 (R5 regression): malformed time labels become NaN and the request is Unavailable 7ms
+     → expected false to be true // Object.is equality
+   × checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T26 (R1 regression): the effective current time is never earlier than the live clock 1ms
+     → resolveCurrentMinutes is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T25 (R5 regression): malformed time labels become NaN and the request is Unavailable
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ eval src/lib/availability.test.ts:423:49
+    421|     expect(labelToMinutes('24:00')).toBe(1440);
+    422|     for (const bad of ['10:75', '24:01', '99:99', 'ab:cd', '7:5', ''])…
+    423|       expect(Number.isNaN(labelToMinutes(bad))).toBe(true);
+       |                                                 ^
+    424|     }
+    425|     const room = makeRoom();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T26 (R1 regression): the effective current time is never earlier than the live clock
+TypeError: resolveCurrentMinutes is not a function
+ ❯ eval src/lib/availability.test.ts:335:56
+    335|     const bookingsSnap = cloneBookings(bookings);
+    336| 
+    337|     const res = checkAvailability(room, 630, 690, NOW, bookings);
+       |     ^
+    338|     expectAvailableNoReason(res);
+    339| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 24 passed (26)
+   Start at  18:45:12
+   Duration  2.06s (transform 126ms, setup 0ms, collect 139ms, tests 13ms, environment 0ms, prepare 212ms)
+
+exit code: 1

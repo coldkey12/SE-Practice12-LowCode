@@ -1,0 +1,10 @@
+
+ RUN  v2.1.9 /home/project
+
+ ✓ src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > T01: touching after existing booking (660–720) should be Available
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 21 skipped (22)
+   Start at  19:12:55
+   Duration  1.73s (transform 49ms, setup 0ms, collect 54ms, tests 3ms, environment 0ms, prepare 182ms)
+

@@ -1,0 +1,6 @@
+Bolt.new terminal, Version 17 (= V16 code, republished), 2026-11-24 18:56:42 — npm test (tail as visible in the terminal)
+     ✓ T08 ... T26 (all ✓, see screenshot 03_bolt_baseline_tests.png)
+ Test Files  1 passed (1)
+      Tests  26 passed (26)
+   Start at  18:56:42
+   Duration  1.85s

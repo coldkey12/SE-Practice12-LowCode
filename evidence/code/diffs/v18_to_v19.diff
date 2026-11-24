@@ -1,0 +1,173 @@
+diff --git a/../../v18/project/src/components/ContractChecker.tsx b/src/components/ContractChecker.tsx
+index b396e16..35a66bf 100644
+--- a/../../v18/project/src/components/ContractChecker.tsx
++++ b/src/components/ContractChecker.tsx
+@@ -2,6 +2,7 @@ import { useState } from 'react';
+ import { CalendarClock, Building2, CircleCheck, CircleX, AlertCircle, Lock } from 'lucide-react';
+ import { checkContract } from '@/lib/contract/availability';
+ import { BOOKINGS, CONTRACT_DAY, ROOM_NAME } from '@/lib/contract/data';
++import { verdictForReason } from '@/lib/contract/verdict';
+ import type { ReasonCode } from '@/lib/contract/validation';
+ 
+ const REASON_TONE: Record<ReasonCode, 'ok' | 'error' | 'warn'> = {
+@@ -39,16 +40,19 @@ export default function ContractChecker() {
+   };
+ 
+   const tone = result ? TONE_STYLES[REASON_TONE[result.reasonCode]] : null;
+-  const verdict =
+-    result === null
+-      ? null
+-      : result.reasonCode === 'AVAILABLE'
+-        ? 'Available'
+-        : REASON_TONE[result.reasonCode] === 'error'
+-          ? 'Invalid input'
+-          : 'Unavailable';
++  const verdict = result ? verdictForReason(result.reasonCode) : null;
+ 
+-  const startLabel = start ? start.replace('T', ' ') : '—';
++  const requestedLabel = (() => {
++    if (!start) return null;
++    const startDate = new Date(start);
++    if (Number.isNaN(startDate.getTime())) return null;
++    const pad = (n: number) => String(n).padStart(2, '0');
++    const date = `${startDate.getFullYear()}-${pad(startDate.getMonth() + 1)}-${pad(startDate.getDate())}`;
++    const from = `${pad(startDate.getHours())}:${pad(startDate.getMinutes())}`;
++    const end = new Date(startDate.getTime() + (Number.isNaN(Number(duration)) ? 0 : Number(duration)) * 60000);
++    const to = `${pad(end.getHours())}:${pad(end.getMinutes())}`;
++    return `${date} ${from}–${to}`;
++  })();
+ 
+   return (
+     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-gray-100">
+@@ -155,9 +159,9 @@ export default function ContractChecker() {
+                     </code>
+                   </div>
+                   <p className={`mt-0.5 break-words text-sm ${tone.sub}`}>{result.message}</p>
+-                  {result.reasonCode === 'AVAILABLE' && (
++                  {result.reasonCode === 'AVAILABLE' && requestedLabel && (
+                     <p className="mt-1 text-sm text-green-700">
+-                      Requested: {startLabel}, {start ? result.message.match(/\d{2}:\d{2}/)?.[0] : ''} onward.
++                      Requested: {requestedLabel}
+                     </p>
+                   )}
+                 </div>
+diff --git a/../../v18/project/src/lib/contract/availability.ts b/src/lib/contract/availability.ts
+index ddf7257..0a073af 100644
+--- a/../../v18/project/src/lib/contract/availability.ts
++++ b/src/lib/contract/availability.ts
+@@ -1,4 +1,4 @@
+-import { ContractBooking } from './data';
++import { CONTRACT_DAY, ContractBooking } from './data';
+ import { ContractInput, ReasonCode, validateInput } from './validation';
+ 
+ export interface ContractResult {
+@@ -17,6 +17,10 @@ export function minutesFromDayStart(date: Date): number {
+   return date.getHours() * 60 + date.getMinutes();
+ }
+ 
++// All fictional bookings are on CONTRACT_DAY; express them as absolute local
++// minutes so comparisons account for both the date and the time of day.
++const BOOKING_DAY_START_MIN = new Date(`${CONTRACT_DAY}T00:00`).getTime() / 60000;
++
+ // Pure: validation first, then ROOM_BLOCKED, then OVERLAP (touching edges are
+ // not an overlap), else AVAILABLE. Never modifies the bookings array.
+ export function checkContract(
+@@ -37,11 +41,13 @@ export function checkContract(
+     };
+   }
+ 
+-  const start = minutesFromDayStart(new Date(input.start));
+-  const end = start + input.durationMinutes;
+-  const conflict = bookings.find(
+-    (b) => start < b.end && b.start < end
+-  );
++  const startMin = new Date(input.start).getTime() / 60000;
++  const endMin = startMin + input.durationMinutes;
++  const conflict = bookings.find((b) => {
++    const bStart = BOOKING_DAY_START_MIN + b.start;
++    const bEnd = BOOKING_DAY_START_MIN + b.end;
++    return startMin < bEnd && bStart < endMin;
++  });
+   if (conflict) {
+     return {
+       available: false,
+@@ -50,9 +56,10 @@ export function checkContract(
+     };
+   }
+ 
++  const startOfDay = minutesFromDayStart(new Date(input.start));
+   return {
+     available: true,
+     reasonCode: 'AVAILABLE',
+-    message: `Available: Room A-101 is free from ${toLabel(start)} to ${toLabel(end)}.`,
++    message: `Available: Room A-101 is free from ${toLabel(startOfDay)} to ${toLabel(startOfDay + input.durationMinutes)}.`,
+   };
+ }
+diff --git a/../../v18/project/src/lib/contract/contract.test.ts b/src/lib/contract/contract.test.ts
+index 1546107..1390547 100644
+--- a/../../v18/project/src/lib/contract/contract.test.ts
++++ b/src/lib/contract/contract.test.ts
+@@ -1,5 +1,6 @@
+ import { describe, it, expect } from 'vitest';
+ import { checkContract } from './availability';
++import { verdictForReason } from './verdict';
+ import { BOOKINGS, TEST_NOW, ROOM_NAME } from './data';
+ import type { ContractBooking } from './data';
+ 
+@@ -138,3 +139,35 @@ describe('Practice #12 contract (extra edge tests)', () => {
+     expect(ROOM_NAME).toBe('Room A-101 (fictional)');
+   });
+ });
++
++describe('Practice #12 contract (D1-D3 regression tests)', () => {
++  it('D2: a slot on a different date never overlaps (2026-12-05T12:30 + 60 -> AVAILABLE)', () => {
++    const result = checkContract({ start: '2026-12-05T12:30', durationMinutes: 60, roomBlocked: false }, NOW, BOOKINGS);
++    expect(result.reasonCode).toBe('AVAILABLE');
++    expect(result.available).toBe(true);
++  });
++
++  it('D2: an interval crossing midnight is free when no booking spans it (2026-12-01T23:30 + 60 -> AVAILABLE)', () => {
++    const result = checkContract({ start: '2026-12-01T23:30', durationMinutes: 60, roomBlocked: false }, NOW, BOOKINGS);
++    expect(result.reasonCode).toBe('AVAILABLE');
++    expect(result.available).toBe(true);
++  });
++
++  it('D2: a real overlap on the booking day still counts (2026-12-01T16:00 + 60 -> OVERLAP, Robotics club)', () => {
++    const result = checkContract({ start: '2026-12-01T16:00', durationMinutes: 60, roomBlocked: false }, NOW, BOOKINGS);
++    expect(result.reasonCode).toBe('OVERLAP');
++    expect(result.available).toBe(false);
++    expect(result.message).toMatch(/Robotics club/);
++  });
++
++  it('D1: verdict mapping for all 8 reason codes', () => {
++    expect(verdictForReason('AVAILABLE')).toBe('Available');
++    expect(verdictForReason('ROOM_BLOCKED')).toBe('Unavailable');
++    expect(verdictForReason('OVERLAP')).toBe('Unavailable');
++    expect(verdictForReason('START_REQUIRED')).toBe('Invalid input');
++    expect(verdictForReason('START_IN_PAST')).toBe('Invalid input');
++    expect(verdictForReason('DURATION_NOT_NUMBER')).toBe('Invalid input');
++    expect(verdictForReason('DURATION_NOT_POSITIVE')).toBe('Invalid input');
++    expect(verdictForReason('DURATION_TOO_LONG')).toBe('Invalid input');
++  });
++});
+diff --git a/src/lib/contract/verdict.ts b/src/lib/contract/verdict.ts
+new file mode 100644
+index 0000000..6da202f
+--- /dev/null
++++ b/src/lib/contract/verdict.ts
+@@ -0,0 +1,15 @@
++import type { ReasonCode } from './validation';
++
++export type Verdict = 'Available' | 'Unavailable' | 'Invalid input';
++
++export function verdictForReason(code: ReasonCode): Verdict {
++  switch (code) {
++    case 'AVAILABLE':
++      return 'Available';
++    case 'ROOM_BLOCKED':
++    case 'OVERLAP':
++      return 'Unavailable';
++    default:
++      return 'Invalid input';
++  }
++}

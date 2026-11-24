@@ -1,0 +1,28 @@
+  "version": "v4.1.0-cloud.5",
+app-error.log
+app-out.log
+litellm-error.log
+litellm-out.log
+litellm-postgres-error.log
+litellm-postgres-out.log
+redis-server-error.log
+redis-server-out.log
+worker-error.log
+worker-out.log
+v22.22.1
+image=sha256:e8d39236960cf22b72d44829a3b2ed9570a31c8c99b677e08f113b9f058bdd95 created=2026-11-19T18:15:35.105766848Z size=1230292769
+     12 postgres
+      7 node
+      7 nginx
+      5 couchjs
+      3 sh
+      2 sort
+      2 inet_gethost
+      1 uniq
+      1 tini
+      1 tail
+      1 su
+      1 sqs
+      1 sleep
+      1 runner.sh
+      1 redis-server

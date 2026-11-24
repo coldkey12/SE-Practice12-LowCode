@@ -1,0 +1,19 @@
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (common tests T1-T8) > T1 valid free interval -> AVAILABLE
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (common tests T1-T8) > T2 overlap with existing booking -> OVERLAP
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (common tests T1-T8) > T3 blocked room -> ROOM_BLOCKED
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (common tests T1-T8) > T4 duration = 0 -> DURATION_NOT_POSITIVE
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (common tests T1-T8) > T5 duration = 121 -> DURATION_TOO_LONG
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (common tests T1-T8) > T6 past start time -> START_IN_PAST
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (common tests T1-T8) > T7 adjacent non-overlapping (13:00-15:00 touches B2 and B3) -> AVAILABLE
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (common tests T1-T8) > T8 bookings unchanged
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (extra edge tests) > empty start -> START_REQUIRED
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (extra edge tests) > malformed start -> START_REQUIRED
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (extra edge tests) > non-integer duration -> DURATION_NOT_NUMBER
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (extra edge tests) > validation errors take precedence over blocked room
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (extra edge tests) > negative duration -> DURATION_NOT_POSITIVE
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (extra edge tests) > start exactly equal to now -> START_IN_PAST
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (extra edge tests) > room name is the fictional one
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (D1-D3 regression tests) > D2: a slot on a different date never overlaps (2026-12-05T12:30 + 60 -> AVAILABLE)
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (D1-D3 regression tests) > D2: an interval crossing midnight is free when no booking spans it (2026-12-01T23:30 + 60 -> AVAILABLE)
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (D1-D3 regression tests) > D2: a real overlap on the booking day still counts (2026-12-01T16:00 + 60 -> OVERLAP, Robotics club)
+ ✓ src/lib/contract/contract.test.ts > Practice #12 contract (D1-D3 regression tests) > D1: verdict mapping for all 8 reason codes

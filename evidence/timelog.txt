@@ -1,0 +1,20 @@
+2026-11-24 18:05:59 START practice12 setup
+2026-11-24 18:24:25 CONTRACT written (contract/CONTRACT.md, test-cases.json)
+2026-11-24 18:26:29 LOWCODE setup start: docker run budibase (image already pulled)
+2026-11-24 18:28:11 LOWCODE Budibase up at http://127.0.0.1:10000
+2026-11-24 18:37:56 LOWCODE first build complete (table, screen, form, JS binding, table) -> start testing
+2026-11-24 18:41:33 LOWCODE tests T1-T8 run: 8/8 pass (first run, no debugging needed; ~5 min fixing layout Grid->Flex before tests)
+2026-11-24 18:42:43 LOWCODE security: HTML-injection found in result text; starting repair (escape title)
+2026-11-24 18:46:15 LOWCODE repair done (escape fix saved after 1 failed save attempt in nested drawer), XSS re-check OK, regression T1-T8 8/8
+2026-11-24 18:48:51 LOWCODE DEFECT: published (prod) app has empty Bookings (dev/prod data separated) -> T2 returns AVAILABLE (wrong). Repair: import CSV into Prod table
+2026-11-24 18:49:46 LOWCODE prod data seeded from Dev; published app T1-T8 8/8; export saved
+2026-11-24 18:54:58 CODE track start: Bolt signed in (user did Google login)
+2026-11-24 18:57:07 CODE baseline frozen in Bolt (V17 bookmarked, npm test 26/26)
+2026-11-24 18:57:13 CODE P1 implementation prompt sent to Bolt
+2026-11-24 19:00:17 CODE Bolt finished V18 (prompt 18:58 -> V18 18:59; Bolt reports 41/41, lint/typecheck/build ok) -> verify
+2026-11-24 19:01:58 CODE V18 verified: unit 41/41, UI 7/8 (T2 label), defects D1 label, D2 date ignored, D3 requested text -> sending fix prompt
+2026-11-24 19:03:43 CODE fix prompt sent 19:02, Bolt V19 at 19:03 (reports 45/45) -> verify
+2026-11-24 21:05:31 CODE V19 verified: unit 45/45, UI 8/8, 1 minor unresolved (24:30 label). Next: publish
+2026-11-24 21:07:21 CODE published V19 to live site; live T1-T8 8/8
+NOTE: gap 19:03:43 -> 21:05:31 = session paused (~2 h, no work done; Playwright artefacts show the V19 export at ~19:04 and the next action at 21:04). Excluded from effort measurements.
+2026-11-24 21:10:18 P2 comparison prompt answered by Bolt (Plan mode, read-only, ~2 min); 14K daily tokens left

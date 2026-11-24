@@ -1,0 +1,15 @@
+
+> vite-react-typescript-starter@0.0.0 test
+> vitest run
+
+
+ RUN  v2.1.9 /Users/coldkey/SE-Practice12-LowCode/evidence/baseline/v16-source
+
+ ✓ src/lib/availability.test.ts (26 tests) 8ms
+
+ Test Files  1 passed (1)
+      Tests  26 passed (26)
+   Start at  18:06:46
+   Duration  650ms (transform 65ms, setup 0ms, collect 53ms, tests 8ms, environment 0ms, prepare 52ms)
+
+EXIT 0

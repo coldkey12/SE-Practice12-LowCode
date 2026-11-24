@@ -1,0 +1,19 @@
+{
+  "room": "Room A-101 (fictional)",
+  "testNow": "2026-11-24T18:00",
+  "bookings": [
+    { "id": "B1", "title": "Algorithms lecture", "start": "2026-12-01T09:00", "end": "2026-12-01T10:30" },
+    { "id": "B2", "title": "Study group", "start": "2026-12-01T12:00", "end": "2026-12-01T13:00" },
+    { "id": "B3", "title": "Robotics club", "start": "2026-12-01T15:00", "end": "2026-12-01T16:30" }
+  ],
+  "tests": [
+    { "id": "T1", "name": "valid free interval", "start": "2026-12-01T17:00", "durationMinutes": 60, "roomBlocked": false, "expected": { "available": true, "reasonCode": "AVAILABLE" } },
+    { "id": "T2", "name": "overlap with existing booking", "start": "2026-12-01T12:30", "durationMinutes": 60, "roomBlocked": false, "expected": { "available": false, "reasonCode": "OVERLAP" } },
+    { "id": "T3", "name": "blocked room", "start": "2026-12-01T17:00", "durationMinutes": 60, "roomBlocked": true, "expected": { "available": false, "reasonCode": "ROOM_BLOCKED" } },
+    { "id": "T4", "name": "duration = 0", "start": "2026-12-01T17:00", "durationMinutes": 0, "roomBlocked": false, "expected": { "available": false, "reasonCode": "DURATION_NOT_POSITIVE" } },
+    { "id": "T5", "name": "duration = 121", "start": "2026-12-01T17:00", "durationMinutes": 121, "roomBlocked": false, "expected": { "available": false, "reasonCode": "DURATION_TOO_LONG" } },
+    { "id": "T6", "name": "past start time", "start": "2026-11-20T10:00", "durationMinutes": 60, "roomBlocked": false, "expected": { "available": false, "reasonCode": "START_IN_PAST" } },
+    { "id": "T7", "name": "adjacent non-overlapping interval", "start": "2026-12-01T13:00", "durationMinutes": 120, "roomBlocked": false, "expected": { "available": true, "reasonCode": "AVAILABLE" } },
+    { "id": "T8", "name": "booking data unchanged after checks", "expected": { "bookingsUnchanged": true } }
+  ]
+}

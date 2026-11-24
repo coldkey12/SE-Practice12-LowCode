@@ -1,0 +1,18 @@
+Compare these code-based and low-code implementations against the same requirements and test evidence. Assess correctness, maintainability, portability, cost, and security. Identify unsupported assumptions. For each risk, provide the observable evidence needed to verify it. Do not treat a platform as secure merely because it is low-code.
+
+Context (read-only review, do not change any files):
+- Code-based = this Bolt project (React + TypeScript + Vitest), contract implemented in src/lib/contract/.
+- Low-code = Budibase Community 4.1.0, self-hosted in Docker on 127.0.0.1 only. Its description and evidence are attached below.
+
+LOW-CODE IMPLEMENTATION (Budibase):
+- Internal table "Bookings" (B1-B3, imported from CSV, start/end stored as text "2026-12-01T09:00").
+- One screen: Data Provider (Bookings) > Form (custom schema): Date Picker "start" (time on, ignore time zones), Number Field "duration", Checkbox "blocked" (room status), Button "Check availability", Text (Markdown) bound to {{ State.result }}; Table of bookings with add/edit/delete rows switched off.
+- Logic: the button runs "Update State" with ONE JavaScript binding (about 25 lines): validation in contract order, blocked, overlap with full date-times, message text. It is stored base64-encoded inside the app definition.
+- Versioning: no Git in the free self-hosted edition; changes are saved live in the builder; the only portable artefact is a workspace export (tar.gz with db.txt + client JS). Dev and Prod data are separate.
+
+EVIDENCE (both implementations, same contract and the same T1-T8 inputs):
+- Code-based: Version 18 (first AI implementation) unit 41/41 but UI 7/8 (OVERLAP labelled "Invalid input") and a hidden date defect (2026-12-05 12:30 reported OVERLAP). Version 19 after one fix prompt: unit 45/45, UI 8/8 in preview and on the live site, lint/typecheck/build pass, npm audit 0 production / 24 dev-tool vulnerabilities. Remaining minor defect: message "free from 23:30 to 24:30" for 23:30 + 60.
+- Low-code: T1-T8 8/8 in dev preview on the first run. Security check found HTML injection: a booking title with <img ...> was rendered as HTML by the Markdown text component (onerror stripped by the sanitizer, no script ran); fixed by escaping in the binding, re-tested 8/8. After Publish the prod table was empty (dev/prod data separation), so the published app answered T2 "Available" (fail-open); fixed with "Seed from Dev", then 8/8 on the published app. Anonymous API read -> 401/302, anonymous write refused; but an admin session could still POST/DELETE rows through the API although the table component hides add/edit/delete. Runs on 127.0.0.1 only; image bundles nginx, CouchDB, Redis, MinIO, Postgres, LiteLLM.
+- Measured time (wall clock from my time log): low-code setup ~2 min (image already pulled; first pull failed several times on network), build ~10 min, first tests ~4 min, security fix + re-test ~4 min, publish defect fix ~3 min. Code-based: AI implementation ~1.5 min + my verification ~5 min, fix prompt ~1 min + verification ~3 min, publish + live re-test ~2 min.
+
+Answer with: (1) a comparison per criterion (correctness, maintainability, portability, cost, security) with the evidence it rests on; (2) unsupported assumptions in my evidence; (3) a risk list where each risk has the observable evidence needed to verify it; (4) a short recommendation for this scenario.

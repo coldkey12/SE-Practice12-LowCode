@@ -1,0 +1,803 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Practice #12 — Don Vladimir 24B030295</title><style>
+  :root { --ink:#1f2937; --muted:#6b7280; --line:#d1d5db; --ok:#047857; --bad:#b91c1c; --warn:#b45309; }
+  @page { size: A4; margin: 14mm 12mm; }
+  body { font: 10.1pt/1.45 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color: var(--ink); background:#fff; margin:0; }
+  h1 { font-size: 18pt; margin: 0 0 4px; }
+  h2 { font-size: 13.5pt; margin: 18px 0 8px; padding-bottom: 3px; border-bottom: 2px solid var(--ink); break-after: avoid; }
+  h3 { font-size: 11pt; margin: 12px 0 6px; break-after: avoid; }
+  p { margin: 6px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; font-size: 8.6pt; }
+  th, td { border: 1px solid var(--line); padding: 3px 5px; text-align: left; vertical-align: top; }
+  th { background: #f3f4f6; }
+  tr { break-inside: avoid; }
+  code, pre { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 8pt; }
+  pre { background: #f6f7f9; border: 1px solid var(--line); padding: 7px; white-space: pre-wrap; word-break: break-word; margin: 6px 0; }
+  pre.answer { background: #fbfaf5; font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 8.4pt; }
+  .meta td:first-child { width: 25%; font-weight: 600; background:#fafafa; }
+  .pass { color: var(--ok); font-weight: 700; } .fail { color: var(--bad); font-weight: 700; } .warn { color: var(--warn); font-weight: 700; }
+  .muted { color: var(--muted); }
+  .note { border-left: 4px solid #f59e0b; background: #fffbeb; padding: 6px 10px; margin: 8px 0; }
+  .decision { border: 2px solid var(--ok); background:#f0fdf4; padding: 8px 12px; margin: 8px 0; }
+  figure { margin: 8px 0 12px; break-inside: avoid; }
+  figure img { width: 100%; border: 1px solid var(--line); }
+  figcaption { font-size: 8.4pt; color: var(--muted); margin-top: 3px; }
+  .row { display: flex; gap: 10px; align-items: flex-start; break-inside: avoid; }
+  .row figure { flex: 1; }
+  .narrow img { max-height: 330px; width: auto; max-width: 100%; }
+  .pb { break-before: page; }
+  ul, ol { margin: 4px 0 6px 18px; padding: 0; }
+</style></head><body>
+<h1>Practice #12 — Compare code-based and low-code solutions</h1>
+<p class="muted">AI-Driven Software Engineering · Lesson #12 · Smart Campus Room Availability Checker · Lecture #12 security (SAST / DAST / SCA)</p>
+<table class="meta">
+  <tr><td>Student</td><td>Don Vladimir, ID 24B030295</td></tr>
+  <tr><td>Email subject</td><td>AI-Driven Software Engineering Practice #12, Don Vladimir, 24B030295</td></tr>
+  <tr><td>Class time and day of week</td><td>Tuesday, 24 November 2026, 16:00–19:00</td></tr>
+  <tr><td>AI tool, version, model</td><td><b>Bolt.new</b> (StackBlitz), Bolt Agent, mode <b>"Standard"</b>; build mode for the implementation prompt and the fix prompt, <b>Plan</b> on (read-only) for the comparison/review prompt. Free plan (14K daily tokens left after the 3 prompts). Bolt does not show the underlying model name.</td></tr>
+  <tr><td>Code-based solution</td><td>Bolt project <code>https://bolt.new/~/sb1-kqaeymwj</code> · Version 17 = baseline (bookmarked) → V18 first implementation → V19 fixes → published.<br>Live demo (Bolt Publish): <a href="https://smart-campus-room-ch-0k2r.bolt.host/">https://smart-campus-room-ch-0k2r.bolt.host/</a></td></tr>
+  <tr><td>Low-code solution</td><td><b>Budibase Community 4.1.0</b> (open-source, $0), self-hosted in Docker on my laptop, bound to <code>127.0.0.1:10000</code> only. App "Room Availability Checker" (published inside the local instance). No subscription bought.</td></tr>
+  <tr><td>Repository</td><td><a href="https://github.com/coldkey12/SE-Practice12-LowCode">https://github.com/coldkey12/SE-Practice12-LowCode</a> — contract, both implementations (source + Budibase export), evidence, report</td></tr>
+</table>
+
+<h2>Result in short</h2>
+<ul>
+<li><b>Same contract</b> (one user story, AC1–AC6, inputs, outputs with reason codes and messages, 3 fictional bookings, T1–T8) was written <b>before</b> either implementation.</li>
+<li><b>Code-based (Bolt):</b> first AI version V18 had unit tests <span class="pass">41/41</span> but the running UI scored <span class="fail">7/8</span> (OVERLAP labelled "Invalid input") and hid a date defect. One fix prompt → V19: unit <span class="pass">45/45</span>, UI <span class="pass">8/8</span> in preview and on the live site. 1 minor defect left open.</li>
+<li><b>Low-code (Budibase):</b> <span class="pass">8/8</span> on the first run in the dev preview. My security check found <b>HTML injection</b> through the Markdown text (fixed), and the <b>published</b> app answered T2 "Available" because Dev and Prod data are separate (fail-open, fixed). After fixes 8/8 in preview and in the published app.</li>
+<li><b>Measured effort</b> (wall clock, my time log): code-based ≈ 12 min, low-code ≈ 23 min (excluding the shared 18-min contract and a failed Docker image download).</li>
+<li><b>Recommendation: keep the code-based solution</b> for this scenario (section 8). Low-code is fine for a quick internal prototype, but only with prod-data seeding and server-side permissions as mandatory steps.</li>
+</ul>
+
+<h2 class="pb">1. Task #01 — Freeze the baseline</h2>
+<p>The final code-based checker from the previous practices (Practice #10, Version 16 code) was opened in Bolt. The newest version, <b>Version 17</b> ("Publish application", same code as V16), was <b>bookmarked</b> as the Practice #12 baseline before any change.</p>
+<table><tr><th>Item</th><th>Baseline value</th></tr>
+<tr><td>Version</td><td>Bolt Version 17 (= V16 code "Strictly validate time labels and availability"), live at https://smart-campus-room-ch-0k2r.bolt.host/</td></tr>
+<tr><td>Booking data</td><td><code>src/lib/data.ts</code>: 5 fictional rooms (Curie Auditorium blocked), 6 fictional bookings (Athena Hall 101 09:00–09:50, 11:00–11:50, 15:00–15:45; Newton Lab 220 10:15–11:00; Turing Lab 305 14:00–15:30; Da Vinci Studio 13:30–14:30)</td></tr>
+<tr><td>Expected behaviour</td><td>AC1–AC6 as in the slides: future start, 1–120 min, overlap → Unavailable (touching edges allowed), blocked → Unavailable, clear decision without changing bookings, understandable feedback for invalid input</td></tr>
+<tr><td>Existing checks</td><td><code>npm test</code> <span class="pass">26 passed (26)</span> in the Bolt terminal and locally; lint and typecheck pass; <code>npm audit</code>: 0 production, <span class="warn">24 dev-tool</span> vulnerabilities</td></tr>
+<tr><td>Rule changes</td><td>None — booking rules were not changed to favour either approach.</td></tr>
+</table>
+<div class="row"><figure><img src="../evidence/baseline/01_live_v16_baseline.png"><figcaption>Baseline screenshot: live site (V16 code) before Practice #12.</figcaption></figure><figure><img src="../evidence/baseline/02_bolt_versions.png"><figcaption>Bolt version history: Version 17 bookmarked as baseline.</figcaption></figure></div>
+<figure><img src="../evidence/baseline/03_bolt_baseline_tests.png"><figcaption>Existing checks in the Bolt terminal: npm test — 26 passed (26).</figcaption></figure>
+
+<h2 class="pb">2. Task #02 — Shared requirement / acceptance-criteria sheet (common contract)</h2>
+<p><b>User story.</b> As a <b>student</b>, I want to enter a future start time and a duration for the campus room and see <b>Available</b> or <b>Unavailable</b> with a clear reason, so that I know whether I can use the room, without changing any existing booking.</p>
+<h3>Acceptance criteria (unchanged)</h3>
+<table>
+<tr><th>ID</th><th>Criterion</th></tr>
+<tr><td>AC1</td><td>Start time must be in the future.</td></tr>
+<tr><td>AC2</td><td>Duration must be greater than zero and at most 120 minutes.</td></tr>
+<tr><td>AC3</td><td>Overlapping bookings are unavailable.</td></tr>
+<tr><td>AC4</td><td>Blocked room is unavailable.</td></tr>
+<tr><td>AC5</td><td>Display a clear decision without changing existing bookings.</td></tr>
+<tr><td>AC6</td><td>Invalid input receives understandable feedback.</td></tr>
+</table>
+<h3>Inputs</h3>
+<table>
+<tr><th>Input</th><th>Type</th><th>Notes</th></tr>
+<tr><td><code>start</code></td><td>local date-time <code>YYYY-MM-DDTHH:MM</code></td><td>required</td></tr>
+<tr><td><code>durationMinutes</code></td><td>number</td><td>whole minutes; valid range 1–120</td></tr>
+<tr><td><code>roomBlocked</code></td><td>boolean</td><td>room-status control (&quot;Room blocked&quot; switch), default <code>false</code></td></tr>
+<tr><td><code>bookings</code></td><td>list of fictional bookings (below)</td><td>read-only</td></tr>
+<tr><td><code>now</code></td><td>date-time</td><td>the real clock in the UI; fixed <code>2026-11-24T18:00</code> in automated tests</td></tr>
+</table>
+<h3>Fictional data — Room A-101 (fictional), all on 2026-12-01</h3>
+<table>
+<tr><th>ID</th><th>Title</th><th>Start</th><th>End</th></tr>
+<tr><td>B1</td><td>Algorithms lecture</td><td>09:00</td><td>10:30</td></tr>
+<tr><td>B2</td><td>Study group</td><td>12:00</td><td>13:00</td></tr>
+<tr><td>B3</td><td>Robotics club</td><td>15:00</td><td>16:30</td></tr>
+</table>
+<h3>Outputs</h3>
+<table>
+<tr><th>Output</th><th>Type</th><th>Meaning</th></tr>
+<tr><td><code>available</code></td><td>boolean</td><td><code>true</code> only for <code>AVAILABLE</code></td></tr>
+<tr><td><code>reasonCode</code></td><td>string (below)</td><td>machine-readable reason</td></tr>
+<tr><td><code>message</code></td><td>string</td><td>the visible message shown to the student</td></tr>
+</table>
+<h3>Evaluation order, reason codes and visible messages</h3>
+<p>First failing check decides. End = start + duration; overlap when <code>start &lt; bookingEnd &amp;&amp; bookingStart &lt; end</code>, so touching edges are not an overlap. Codes 1–5 are validation errors (AC6), 6–7 Unavailable, 8 Available. The check never writes to the booking list (AC5).</p>
+<table>
+<tr><th>#</th><th>Reason code</th><th>Rule</th><th>Visible message</th></tr>
+<tr><td>1</td><td><code>START_REQUIRED</code></td><td>start empty or not a valid date-time (AC6)</td><td>Please choose a start date and time.</td></tr>
+<tr><td>2</td><td><code>START_IN_PAST</code></td><td>start ≤ now (AC1)</td><td>Start time must be in the future.</td></tr>
+<tr><td>3</td><td><code>DURATION_NOT_NUMBER</code></td><td>duration empty / not a whole number (AC6)</td><td>Duration must be a whole number of minutes.</td></tr>
+<tr><td>4</td><td><code>DURATION_NOT_POSITIVE</code></td><td>duration ≤ 0 (AC2)</td><td>Duration must be greater than 0 minutes.</td></tr>
+<tr><td>5</td><td><code>DURATION_TOO_LONG</code></td><td>duration &gt; 120 (AC2)</td><td>Duration must be at most 120 minutes.</td></tr>
+<tr><td>6</td><td><code>ROOM_BLOCKED</code></td><td>room blocked (AC4)</td><td>Unavailable: the room is blocked.</td></tr>
+<tr><td>7</td><td><code>OVERLAP</code></td><td>overlaps a booking (AC3)</td><td>Unavailable: overlaps with &quot;&lt;title&gt;&quot; (&lt;HH:MM&gt;–&lt;HH:MM&gt;).</td></tr>
+<tr><td>8</td><td><code>AVAILABLE</code></td><td>none of the above</td><td>Available: Room A-101 is free from &lt;HH:MM&gt; to &lt;HH:MM&gt;.</td></tr>
+</table>
+<h3>Common test inputs (prepared before implementation)</h3>
+<table>
+<tr><th>Test</th><th>start</th><th>duration</th><th>blocked</th><th>Expected available</th><th>Expected reason code</th></tr>
+<tr><td>T1 valid free interval</td><td>2026-12-01 17:00</td><td>60</td><td>no</td><td>true</td><td><code>AVAILABLE</code></td></tr>
+<tr><td>T2 overlap with existing booking</td><td>2026-12-01 12:30</td><td>60</td><td>no</td><td>false</td><td><code>OVERLAP</code> (Study group)</td></tr>
+<tr><td>T3 blocked room</td><td>2026-12-01 17:00</td><td>60</td><td><b>yes</b></td><td>false</td><td><code>ROOM_BLOCKED</code></td></tr>
+<tr><td>T4 duration = 0</td><td>2026-12-01 17:00</td><td>0</td><td>no</td><td>false</td><td><code>DURATION_NOT_POSITIVE</code></td></tr>
+<tr><td>T5 duration = 121</td><td>2026-12-01 17:00</td><td>121</td><td>no</td><td>false</td><td><code>DURATION_TOO_LONG</code></td></tr>
+<tr><td>T6 past start time</td><td>2026-11-20 10:00</td><td>60</td><td>no</td><td>false</td><td><code>START_IN_PAST</code></td></tr>
+<tr><td>T7 adjacent non-overlapping</td><td>2026-12-01 13:00</td><td>120</td><td>no</td><td>true</td><td><code>AVAILABLE</code> (13:00–15:00 touches B2 and B3)</td></tr>
+<tr><td>T8 bookings unchanged</td><td>run T1–T7, compare the booking list before/after</td><td>–</td><td>–</td><td>–</td><td>list identical (3 bookings, same values)</td></tr>
+</table>
+<p class="muted">Machine-readable copy: <code>contract/test-cases.json</code>. Written 18:06–18:24 (18 min), before either implementation started.</p>
+
+<h2 class="pb">3. Task #03 — Code-based solution (Bolt.new)</h2>
+<h3>3.1 Prompt 1 — implementation (the slide's suggested prompt + the contract)</h3>
+<p>Sent in build mode at 18:57 as a pasted attachment (Bolt turns long pastes into an attachment) with one typed line. Full text: <code>evidence/prompts/P1_implementation_prompt.txt</code>. Beginning:</p>
+<pre>Act as a software engineering assistant. Implement the Smart Campus availability contract in this Bolt.new project (React + TypeScript + Vitest). Keep all six acceptance criteria unchanged. Use fictional data only. Separate deterministic booking rules from presentation. Explain limitations and provide tests. Do not invent successful test results.
+
+The full contract (user story, AC1-AC6, inputs, outputs, reason codes, messages, fictional data and the common tests T1-T8) is below. Implement exactly this contract:
+
+1. src/lib/contract/data.ts: ROOM_NAME and the three fictional bookings (read-only / frozen).
+2. src/lib/contract/validation.ts: pure validateInput(input, now) that returns the first validation error (codes 1-5 in the contract order) or null.
+3. src/lib/contract/availability.ts: pure checkContract(input, now, bookings) returning { available, reasonCode, message }; validation first, then ROOM_BLOCKED, then OVERLAP (touching edges are not an overlap), else AVAILABLE. It must never modify the bookings array.
+4. src/lib/contract/contract.test.ts: Vitest tests T1-T8 exactly as in the contract table with now = 2026-11-24T18:00 (T8 deep-compares the bookings before and after running T1-T7). Add a few edge tests if useful.
+5. UI (presentation only, no rules in components): make the contract checker the main screen. Controls: start (datetime-local), duration in minutes (number), &quot;Room blocked&quot; switch, &quot;Check availability&quot; button. Result card shows Available / Unavailable / Invalid input, the reason code and the visible message from the contract. Show the room&#x27;s bookings list. Use the real clock as &quot;now&quot;. It must be usable on desktop and on a 390 px wide phone screen.
+6. Keep the existing src/lib/availability.ts and its 26 tests unchanged so they still pass. Do not add dependencies.
+7. Run npm test, npm run lint, npm run typecheck and npm run build, and paste the real terminal output. If something fails, say so.</pre>
+<p class="muted">… followed by the whole contract from section 2.</p>
+<h3>Bolt's answer (Version 18, 18:59)</h3>
+<pre class="answer">[Prompt as typed] Implement the attached Practice #12 contract exactly as written (the attachment is the full prompt).
+[Attachment] = P1_implementation_prompt.txt
+[Bolt answer, Standard mode, Build (Plan off), Version 18 at Nov 24 6:59 PM]
+
+I&#x27;ll implement the Practice #12 contract: four new files under a contract folder, a rewritten main screen, and the real check runs. First, the package scripts.
+(files read)
+All four contract files plus the rewritten main screen are going in now.
+(actions taken)
+Now the UI — presentation only, all rules stay in the contract module.
+(actions taken)
+All files are in place. Now running the four checks and capturing the real output.
+(commands executed)
+Lint found an unused helper — removing it and re-running.
+(actions taken)
+The Practice #12 contract is implemented and all four checks pass with real runs. The app&#x27;s main screen is now the contract checker: a start date-time picker, a duration field (1–120), a &quot;Room blocked&quot; switch, a Check button, and a result card showing the verdict, reason code, and the contract&#x27;s exact message, plus the room&#x27;s fictional bookings list. Booking rules live only in the new contract module — the UI just displays results — and the previous availability module and its 26 tests are untouched.
+
+Real terminal output:
+
+npm test — 2 files, 41 passed (41): availability.test.ts (26), contract.test.ts (15) — includes T1–T8 (T8 deep-compares bookings before/after T1–T7) plus 7 edge tests.
+
+npm run lint — clean after one fix: eslint initially flagged an unused helper in the new screen, which I removed; second run passed with no errors.
+
+npm run typecheck — no errors.
+
+npm run build — succeeded (✓ built in 2.05s). One non-blocking warning: caniuse-lite is outdated (a browser-data table used by the build tool, not a code problem); fixing it would mean updating dependencies, which you excluded, so I left it as is.
+
+Limitations: checks use the real clock, so T1/T7-type results depend on when you click (bookings are on 2026-12-01); no booking is ever created or modified; no login or persistence — the three bookings are frozen fictional data.</pre>
+<h3>3.2 My verification of Version 18</h3>
+<p>I downloaded the project, re-ran every check locally (same results as Bolt: 41/41, lint, typecheck, build) and then ran T1–T8 in the <b>running UI</b> (Bolt preview), plus one probe on another date.</p>
+<table><tr><th>Check</th><th>Bolt's claim</th><th>Observed</th><th>Verdict</th></tr>
+<tr><td>npm test</td><td>41 passed</td><td>41 passed (local and Bolt)</td><td class="pass">confirmed</td></tr>
+<tr><td>lint / typecheck / build</td><td>pass</td><td>pass</td><td class="pass">confirmed</td></tr>
+<tr><td>UI T2 (overlap)</td><td>"result card showing the verdict"</td><td>card says <b>"Invalid input"</b> with code OVERLAP</td><td class="fail">defect D1</td></tr>
+<tr><td>Probe 2026-12-05 12:30 + 60</td><td>(not tested by Bolt)</td><td>OVERLAP with "Study group" — but that booking is on 12-01</td><td class="fail">defect D2: date ignored</td></tr>
+<tr><td>Result line</td><td>—</td><td>"Requested: 2026-12-01 13:00, 13:00 onward." (no end time)</td><td class="warn">defect D3</td></tr>
+<tr><td>T8 bookings unchanged</td><td>deep-compare test</td><td>list identical before/after T1–T7</td><td class="pass">confirmed</td></tr>
+</table>
+<div class="row"><figure><img src="../evidence/code/T2_code_v18.png"><figcaption>V18, T2: reason code OVERLAP but verdict label 'Invalid input' (D1).</figcaption></figure><figure><img src="../evidence/code/PROBE_other_day_code_v18.png"><figcaption>V18, 2026-12-05 12:30: OVERLAP with a booking on another day (D2).</figcaption></figure></div>
+<p>Why the 41 green tests missed it: the tests asserted only reason codes, and every case was on 2026-12-01. <b>Green unit tests did not mean a correct running app.</b></p>
+<h3>3.3 Prompt 2 — fix (build mode, 19:02)</h3>
+<pre>I tested Version 18 in the running app. Unit tests pass, but I found three defects. Fix only these, keep everything else unchanged, no new dependencies:
+
+D1 (UI): an OVERLAP result is labelled &quot;Invalid input&quot;. The verdict must be: AVAILABLE -&gt; &quot;Available&quot;; ROOM_BLOCKED and OVERLAP -&gt; &quot;Unavailable&quot;; START_REQUIRED, START_IN_PAST and the three DURATION_* codes -&gt; &quot;Invalid input&quot;. Move this mapping into a pure function in src/lib/contract so it can be unit-tested, and use it in the UI.
+
+D2 (rules): checkContract compares only the time of day and ignores the date. Start 2026-12-05T12:30 for 60 min returns OVERLAP with &quot;Study group&quot;, but that booking is on 2026-12-01. Compare full local date-times (date + time) so only real overlaps count; an interval that crosses midnight must also work.
+
+D3 (UI): the line &quot;Requested: 2026-12-01 13:00, 13:00 onward.&quot; hides the end time. Show &quot;Requested: &lt;date&gt; &lt;start&gt;–&lt;end&gt;&quot;.
+
+Add regression tests: 2026-12-05T12:30 + 60 -&gt; AVAILABLE; 2026-12-01T23:30 + 60 -&gt; AVAILABLE; 2026-12-01T16:00 + 60 -&gt; OVERLAP (Robotics club); and the verdict mapping for all 8 reason codes. Then run npm test, npm run lint, npm run typecheck, npm run build and paste the real output.</pre>
+<h3>Bolt's answer (Version 19, 19:03)</h3>
+<pre class="answer">[Prompt] = P1b_fix_prompt.txt (pasted as text)
+[Bolt answer, Standard mode, Build, Version 19 at Nov 24 7:03 PM]
+
+Three fixes: a pure verdict mapping in the contract module, date-aware overlap comparison, and a full requested-range display. Starting with the contract module.
+(actions taken)
+Now the UI: use the pure verdict mapping and show the full requested range.
+(actions taken)
+Now adding the requested regression tests to the contract test file.
+(actions taken)
+All three defects are fixed, with only these changes made.
+
+D1: the verdict now comes from a pure, unit-tested function in the contract module: AVAILABLE → &quot;Available&quot;; ROOM_BLOCKED and OVERLAP → &quot;Unavailable&quot;; the five input errors → &quot;Invalid input&quot;. An OVERLAP result no longer shows &quot;Invalid input&quot;.
+D2: overlap checking now compares the full date and time, so a slot on 2026-12-05 no longer collides with a 2026-12-01 booking, and intervals crossing midnight (like 23:30 + 60) work correctly.
+D3: the result card now shows &quot;Requested: 2026-12-01 13:00–14:00&quot; with both start and end instead of only the start.
+
+Four regression tests were added (the three date cases plus the full 8-code verdict mapping); the suite went from 41 to 45 tests, all passing. Real terminal output:
+
+npm test — Test Files 2 passed (2), Tests 45 passed (45) (availability 26, contract 19).
+npm run lint — no errors.
+npm run typecheck — no errors.
+npm run build — ✓ built in 1.69s (same non-blocking caniuse-lite is outdated data warning as before; updating it would mean touching dependencies, which you excluded).</pre>
+<h3>3.4 Final structure (Version 19) — validation, availability and display are separate</h3>
+<table><tr><th>Layer</th><th>File</th><th>Role</th></tr>
+<tr><td>Data</td><td><code>src/lib/contract/data.ts</code></td><td>ROOM_NAME, 3 frozen fictional bookings, CONTRACT_DAY</td></tr>
+<tr><td>Validation</td><td><code>src/lib/contract/validation.ts</code></td><td>pure <code>validateInput</code> → first error of codes 1–5, contract messages</td></tr>
+<tr><td>Availability</td><td><code>src/lib/contract/availability.ts</code></td><td>pure <code>checkContract</code>: validation → ROOM_BLOCKED → OVERLAP (date-aware) → AVAILABLE; never mutates bookings</td></tr>
+<tr><td>Verdict</td><td><code>src/lib/contract/verdict.ts</code></td><td>pure reason-code → "Available / Unavailable / Invalid input" mapping (added by the fix)</td></tr>
+<tr><td>UI (display only)</td><td><code>src/components/ContractChecker.tsx</code></td><td>datetime-local, duration, "Room blocked" switch, result card, bookings list; responsive (max-w-2xl, stacks on 390 px)</td></tr>
+<tr><td>Tests</td><td><code>src/lib/contract/contract.test.ts</code></td><td>T1–T8 with fixed now = 2026-11-24T18:00, 7 edge tests, 4 D1/D2 regressions</td></tr>
+</table>
+<pre>import { CONTRACT_DAY, ContractBooking } from &#x27;./data&#x27;;
+import { ContractInput, ReasonCode, validateInput } from &#x27;./validation&#x27;;
+
+export interface ContractResult {
+  available: boolean;
+  reasonCode: ReasonCode;
+  message: string;
+}
+
+function toLabel(min: number): string {
+  const h = String(Math.floor(min / 60)).padStart(2, &#x27;0&#x27;);
+  const m = String(min % 60).padStart(2, &#x27;0&#x27;);
+  return `${h}:${m}`;
+}
+
+export function minutesFromDayStart(date: Date): number {
+  return date.getHours() * 60 + date.getMinutes();
+}
+
+// All fictional bookings are on CONTRACT_DAY; express them as absolute local
+// minutes so comparisons account for both the date and the time of day.
+const BOOKING_DAY_START_MIN = new Date(`${CONTRACT_DAY}T00:00`).getTime() / 60000;
+
+// Pure: validation first, then ROOM_BLOCKED, then OVERLAP (touching edges are
+// not an overlap), else AVAILABLE. Never modifies the bookings array.
+export function checkContract(
+  input: ContractInput,
+  now: Date,
+  bookings: readonly ContractBooking[]
+): ContractResult {
+  const error = validateInput(input, now);
+  if (error) {
+    return { available: false, reasonCode: error.code, message: error.message };
+  }
+
+  if (input.roomBlocked) {
+    return {
+      available: false,
+      reasonCode: &#x27;ROOM_BLOCKED&#x27;,
+      message: &#x27;Unavailable: the room is blocked.&#x27;,
+    };
+  }
+
+  const startMin = new Date(input.start).getTime() / 60000;
+  const endMin = startMin + input.durationMinutes;
+  const conflict = bookings.find((b) =&gt; {
+    const bStart = BOOKING_DAY_START_MIN + b.start;
+    const bEnd = BOOKING_DAY_START_MIN + b.end;
+    return startMin &lt; bEnd &amp;&amp; bStart &lt; endMin;
+  });
+  if (conflict) {
+    return {
+      available: false,
+      reasonCode: &#x27;OVERLAP&#x27;,
+      message: `Unavailable: overlaps with &quot;${conflict.title}&quot; (${toLabel(conflict.start)}–${toLabel(conflict.end)}).`,
+    };
+  }
+
+  const startOfDay = minutesFromDayStart(new Date(input.start));
+  return {
+    available: true,
+    reasonCode: &#x27;AVAILABLE&#x27;,
+    message: `Available: Room A-101 is free from ${toLabel(startOfDay)} to ${toLabel(startOfDay + input.durationMinutes)}.`,
+  };
+}</pre>
+<h3>3.5 Running result (Version 19)</h3>
+<pre> ✓ Practice #12 contract (common tests T1-T8) &gt; T1 valid free interval -&gt; AVAILABLE
+ ✓ Practice #12 contract (common tests T1-T8) &gt; T2 overlap with existing booking -&gt; OVERLAP
+ ✓ Practice #12 contract (common tests T1-T8) &gt; T3 blocked room -&gt; ROOM_BLOCKED
+ ✓ Practice #12 contract (common tests T1-T8) &gt; T4 duration = 0 -&gt; DURATION_NOT_POSITIVE
+ ✓ Practice #12 contract (common tests T1-T8) &gt; T5 duration = 121 -&gt; DURATION_TOO_LONG
+ ✓ Practice #12 contract (common tests T1-T8) &gt; T6 past start time -&gt; START_IN_PAST
+ ✓ Practice #12 contract (common tests T1-T8) &gt; T7 adjacent non-overlapping (13:00-15:00 touches B2 and B3) -&gt; AVAILABLE
+ ✓ Practice #12 contract (common tests T1-T8) &gt; T8 bookings unchanged
+ ✓ Practice #12 contract (extra edge tests) &gt; empty start -&gt; START_REQUIRED
+ ✓ Practice #12 contract (extra edge tests) &gt; malformed start -&gt; START_REQUIRED
+ ✓ Practice #12 contract (extra edge tests) &gt; non-integer duration -&gt; DURATION_NOT_NUMBER
+ ✓ Practice #12 contract (extra edge tests) &gt; validation errors take precedence over blocked room
+ ✓ Practice #12 contract (extra edge tests) &gt; negative duration -&gt; DURATION_NOT_POSITIVE
+ ✓ Practice #12 contract (extra edge tests) &gt; start exactly equal to now -&gt; START_IN_PAST
+ ✓ Practice #12 contract (extra edge tests) &gt; room name is the fictional one
+ ✓ Practice #12 contract (D1-D3 regression tests) &gt; D2: a slot on a different date never overlaps (2026-12-05T12:30 + 60 -&gt; AVAILABLE)
+ ✓ Practice #12 contract (D1-D3 regression tests) &gt; D2: an interval crossing midnight is free when no booking spans it (2026-12-01T23:30 + 60 -&gt; AVAILABLE)
+ ✓ Practice #12 contract (D1-D3 regression tests) &gt; D2: a real overlap on the booking day still counts (2026-12-01T16:00 + 60 -&gt; OVERLAP, Robotics club)
+ ✓ Practice #12 contract (D1-D3 regression tests) &gt; D1: verdict mapping for all 8 reason codes</pre>
+<pre>### npm run test
+ ✓ src/lib/availability.test.ts (26 tests) 16ms
+ ✓ src/lib/contract/contract.test.ts (19 tests) 12ms
+ Test Files  2 passed (2)
+      Tests  45 passed (45)
+### npm run lint
+### npm run typecheck
+### npm run build
+✓ built in 1.44s</pre>
+<div class="row"><figure><img src="../evidence/code/T2_code_v19.png"><figcaption>V19, T2: Unavailable · OVERLAP · contract message.</figcaption></figure><figure><img src="../evidence/code/PROBE_other_day_code_v19.png"><figcaption>V19, 2026-12-05 12:30: Available (D2 fixed).</figcaption></figure></div>
+<div class="row"><figure class="narrow"><img src="../evidence/code/mobile_390_code_v19.png"><figcaption>Narrow screen (390 px).</figcaption></figure><figure><img src="../evidence/code/03_bolt_published_v19.png"><figcaption>Republished with Bolt Publish (Update) — live site now runs V19.</figcaption></figure></div>
+<p class="note"><b>Open defect R1 (minor):</b> for 2026-12-01 23:30 + 60 the message says "free from 23:30 to <b>24:30</b>" while the "Requested" line correctly says 23:30–00:30. The decision (Available) is correct; only the label does not wrap past midnight. Left open on purpose and counted as unresolved.</p>
+
+<h2 class="pb">4. Task #04 — Low-code solution (Budibase Community, self-hosted)</h2>
+<p><b>Platform choice.</b> Budibase was on the course list and its Community edition is free to self-host (the Budibase Cloud plan starts at $299/month, so it was not used — no subscriptions bought). It runs as one Docker container (<code>budibase/budibase:latest</code>, v4.1.0) on my laptop, bound to <code>127.0.0.1</code>; the admin account is a local fictional one (<code>student@example.com</code>).</p>
+<h3>Build steps (visual tooling)</h3>
+<ol>
+<li><b>Data:</b> Data tables → Upload CSV → table <b>Bookings</b> (booking_id, title, start, end) with the same 3 fictional bookings as the contract.</li>
+<li><b>App + screen:</b> Create → App "Room Availability Checker"; screen layout set to <b>Flex</b> (the default Grid layout clipped the content — first layout bug).</li>
+<li><b>Components:</b> Data Provider (Bookings) ▸ Text (heading) ▸ Form (custom schema, nothing is saved) with <b>Date Picker</b> "start" (time on), <b>Number Field</b> "duration", <b>Checkbox</b> "Room blocked (room status)", <b>Button</b> "Check availability", <b>Text</b> bound to <code>{{ State.result }}</code> ▸ <b>Table</b> of bookings with Add / Edit / Delete rows and row selection switched off.</li>
+<li><b>Workflow:</b> button On click → <b>Update State</b> (key <code>result</code>) whose value is one JavaScript binding — the only script in the app ("small scripts only when necessary": the platform has no visual way to express "first failing rule wins" with overlap on dates).</li>
+</ol>
+<div class="row"><figure><img src="../evidence/lowcode/01_bookings_table.png"><figcaption>Budibase DB table 'Bookings' created from CSV (fictional data).</figcaption></figure><figure><img src="../evidence/lowcode/02_builder_screen.png"><figcaption>Builder: component tree and the screen.</figcaption></figure></div>
+<h3>The JavaScript binding (version 2, after the security fix)</h3>
+<pre>// Budibase JS binding used by the &quot;Check availability&quot; button
+// (On click -&gt; Update State, key &quot;result&quot;). This is the only script in the
+// low-code app; inputs, data, table and layout are configured visually.
+const pad = (n) =&gt; String(n).padStart(2, &quot;0&quot;);
+// v2 (security fix): escape data from the table before it reaches the Markdown/HTML text component
+const esc = (t) =&gt; String(t).replace(/&amp;/g, &quot;&amp;amp;&quot;).replace(/&lt;/g, &quot;&amp;lt;&quot;).replace(/&gt;/g, &quot;&amp;gt;&quot;).replace(/&quot;/g, &quot;&amp;quot;&quot;);
+const hm = (d) =&gt; pad(d.getHours()) + &quot;:&quot; + pad(d.getMinutes());
+const out = (available, code, message) =&gt; {
+  const decision = available ? &quot;Available&quot; : (code === &quot;ROOM_BLOCKED&quot; || code === &quot;OVERLAP&quot; ? &quot;Unavailable&quot; : &quot;Invalid input&quot;);
+  return &quot;**&quot; + decision + &quot;** | available = &quot; + available + &quot; | reason code = &quot; + code + &quot;\n\n&quot; + message;
+};
+const rawStart = $(&quot;[New Form].Fields.start&quot;);
+const rawDuration = $(&quot;[New Form].Fields.duration&quot;);
+const blocked = $(&quot;[New Form].Fields.blocked&quot;) === true;
+const rows = $(&quot;[New Data Provider].Rows&quot;) || [];
+const now = new Date();
+
+const start = rawStart ? new Date(rawStart) : null;
+if (!start || isNaN(start.getTime())) return out(false, &quot;START_REQUIRED&quot;, &quot;Please choose a start date and time.&quot;);
+if (start &lt;= now) return out(false, &quot;START_IN_PAST&quot;, &quot;Start time must be in the future.&quot;);
+if (rawDuration === undefined || rawDuration === null || rawDuration === &quot;&quot; || !Number.isInteger(Number(rawDuration)))
+  return out(false, &quot;DURATION_NOT_NUMBER&quot;, &quot;Duration must be a whole number of minutes.&quot;);
+const duration = Number(rawDuration);
+if (duration &lt;= 0) return out(false, &quot;DURATION_NOT_POSITIVE&quot;, &quot;Duration must be greater than 0 minutes.&quot;);
+if (duration &gt; 120) return out(false, &quot;DURATION_TOO_LONG&quot;, &quot;Duration must be at most 120 minutes.&quot;);
+if (blocked) return out(false, &quot;ROOM_BLOCKED&quot;, &quot;Unavailable: the room is blocked.&quot;);
+const end = new Date(start.getTime() + duration * 60000);
+const hit = rows.find((r) =&gt; start &lt; new Date(r.end) &amp;&amp; new Date(r.start) &lt; end);
+if (hit) return out(false, &quot;OVERLAP&quot;, &#x27;Unavailable: overlaps with &quot;&#x27; + esc(hit.title) + &#x27;&quot; (&#x27; + hm(new Date(hit.start)) + &quot;–&quot; + hm(new Date(hit.end)) + &quot;).&quot;);
+return out(true, &quot;AVAILABLE&quot;, &quot;Available: Room A-101 is free from &quot; + hm(start) + &quot; to &quot; + hm(end) + &quot;.&quot;);</pre>
+<h3>Requirements the platform could not implement visually (recorded as asked)</h3>
+<ul>
+<li>Rule ordering and interval overlap on date-times → needed the JS binding above (no visual rule builder for this in the free edition).</li>
+<li>Exact contract messages with values ("overlaps with "Study group" (12:00–13:00)") → string building in the binding.</li>
+<li>Unit tests: Budibase has no test runner for bindings → T1–T8 could only be run through the UI.</li>
+<li>Git versioning, backups (Premium) and audit logs (Enterprise) are not in the free edition (screenshots in evidence/lowcode/05–06).</li>
+<li>Public hosting: the free self-hosted app is only on my laptop; there is no public demo link for the low-code version.</li>
+</ul>
+<div class="row"><figure><img src="../evidence/lowcode/T2_lowcode.png"><figcaption>Low-code T2 (dev preview): Unavailable · OVERLAP · contract message.</figcaption></figure><figure><img src="../evidence/lowcode/mobile_390_lowcode.png" style="max-height:330px;width:auto"><figcaption>Narrow screen: form stacks; the bookings table scrolls sideways.</figcaption></figure></div>
+
+<h2 class="pb">5. Task #05 — Identical tests: eight-case table (expected vs observed)</h2>
+<p>Same inputs in both apps, typed into the <b>running UI</b> (code: Bolt preview; low-code: Budibase dev preview), real clock as "now" (24 Nov 2026, evening). To keep the runs identical and repeatable, the inputs were entered by a scripted browser (Playwright) and a screenshot was saved for every case. The code-based T1–T8 were also run as unit tests (fixed now) and repeated on the live site.</p>
+<table><tr><th>Test</th><th>Input</th><th>Expected</th><th>Code-based V18 (first AI version)</th><th>Code-based V19 (final)</th><th>Low-code (Budibase)</th></tr>
+<tr><td><b>T1</b></td><td>2026-12-01 17:00, 60, not blocked</td><td>Available · AVAILABLE</td><td>Available | AVAILABLE | Available: Room A-101 is free from 17:00 to 18:00. <span class="pass">PASS</span></td><td>Available | AVAILABLE | Available: Room A-101 is free from 17:00 to 18:00. | Requested: 2026-12-01 17:00–18:00 <span class="pass">PASS</span></td><td>Available | available = true | reason code = AVAILABLE — Available: Room A-101 is free from 17:00 to 18:00. <span class="pass">PASS</span></td></tr><tr><td><b>T2</b></td><td>2026-12-01 12:30, 60</td><td>Unavailable · OVERLAP (Study group)</td><td>Invalid input | OVERLAP | Unavailable: overlaps with &quot;Study group&quot; (12:00–13:00). <span class="fail">FAIL</span></td><td>Unavailable | OVERLAP | Unavailable: overlaps with &quot;Study group&quot; (12:00–13:00). <span class="pass">PASS</span></td><td>Unavailable | available = false | reason code = OVERLAP — Unavailable: overlaps with &quot;Study group&quot; (12:00–13:00). <span class="pass">PASS</span></td></tr><tr><td><b>T3</b></td><td>2026-12-01 17:00, 60, blocked</td><td>Unavailable · ROOM_BLOCKED</td><td>Unavailable | ROOM_BLOCKED | Unavailable: the room is blocked. <span class="pass">PASS</span></td><td>Unavailable | ROOM_BLOCKED | Unavailable: the room is blocked. <span class="pass">PASS</span></td><td>Unavailable | available = false | reason code = ROOM_BLOCKED — Unavailable: the room is blocked. <span class="pass">PASS</span></td></tr><tr><td><b>T4</b></td><td>2026-12-01 17:00, 0</td><td>validation error · DURATION_NOT_POSITIVE</td><td>Invalid input | DURATION_NOT_POSITIVE | Duration must be greater than 0 minutes. <span class="pass">PASS</span></td><td>Invalid input | DURATION_NOT_POSITIVE | Duration must be greater than 0 minutes. <span class="pass">PASS</span></td><td>Invalid input | available = false | reason code = DURATION_NOT_POSITIVE — Duration must be greater than 0 minutes. <span class="pass">PASS</span></td></tr><tr><td><b>T5</b></td><td>2026-12-01 17:00, 121</td><td>validation error · DURATION_TOO_LONG</td><td>Invalid input | DURATION_TOO_LONG | Duration must be at most 120 minutes. <span class="pass">PASS</span></td><td>Invalid input | DURATION_TOO_LONG | Duration must be at most 120 minutes. <span class="pass">PASS</span></td><td>Invalid input | available = false | reason code = DURATION_TOO_LONG — Duration must be at most 120 minutes. <span class="pass">PASS</span></td></tr><tr><td><b>T6</b></td><td>2026-11-20 10:00, 60</td><td>validation error · START_IN_PAST</td><td>Invalid input | START_IN_PAST | Start time must be in the future. <span class="pass">PASS</span></td><td>Invalid input | START_IN_PAST | Start time must be in the future. <span class="pass">PASS</span></td><td>Invalid input | available = false | reason code = START_IN_PAST — Start time must be in the future. <span class="pass">PASS</span></td></tr><tr><td><b>T7</b></td><td>2026-12-01 13:00, 120</td><td>Available · AVAILABLE (13:00–15:00)</td><td>Available | AVAILABLE | Available: Room A-101 is free from 13:00 to 15:00. <span class="pass">PASS</span></td><td>Available | AVAILABLE | Available: Room A-101 is free from 13:00 to 15:00. | Requested: 2026-12-01 13:00–15:00 <span class="pass">PASS</span></td><td>Available | available = true | reason code = AVAILABLE — Available: Room A-101 is free from 13:00 to 15:00. <span class="pass">PASS</span></td></tr><tr><td><b>T8</b></td><td>run T1–T7, compare bookings</td><td>bookings unchanged</td><td>Existing bookings list identical before/after T1-T7 <span class="pass">PASS</span></td><td>Existing bookings list identical before/after T1-T7 <span class="pass">PASS</span></td><td>Bookings table text identical before T1 and after T7 (B1 09:00-10:30, B2 12:00-13:00, B3 15:00-16:30) <span class="pass">PASS</span></td></tr>
+<tr><th colspan="3">Score</th><th class="warn">7 / 8</th><th class="pass">8 / 8</th><th class="pass">8 / 8</th></tr>
+</table>
+<h3>Additional checks run on both</h3>
+<table><tr><th>Check</th><th>Code-based</th><th>Low-code</th></tr>
+<tr><td>Empty duration (AC6)</td><td class="pass">Invalid input · DURATION_NOT_NUMBER</td><td class="pass">Invalid input · DURATION_NOT_NUMBER</td></tr>
+<tr><td>Other date 2026-12-05 12:30 + 60</td><td>V18 <span class="fail">OVERLAP (wrong)</span> → V19 <span class="pass">Available</span></td><td class="pass">Available (binding compares full date-times)</td></tr>
+<tr><td>T1–T8 on the deployed version</td><td class="pass">8/8 on the live bolt.host site</td><td>published app: <span class="fail">T2 "Available" (empty prod table)</span> → after "Seed from Dev" <span class="pass">8/8</span></td></tr>
+<tr><td>Unit tests</td><td class="pass">45/45 (Vitest)</td><td>not possible (no test runner for bindings)</td></tr>
+</table>
+<div class="row"><figure><img src="../evidence/lowcode/04_published_T2_before_prod_data.png"><figcaption>Published low-code app before the fix: T2 answered 'Available' — the prod Bookings table was empty.</figcaption></figure><figure><img src="../evidence/lowcode/published_T2.png"><figcaption>Published low-code app after 'Seed from Dev': T2 Unavailable · OVERLAP.</figcaption></figure></div>
+<div class="row"><figure><img src="../evidence/code/live_T2.png"><figcaption>Code-based live site (bolt.host, V19): T2.</figcaption></figure><figure><img src="../evidence/code/live_T7.png"><figcaption>Code-based live site: T7 adjacent 13:00–15:00 Available.</figcaption></figure></div>
+
+<h2 class="pb">6. Task #06 — Engineering effort</h2>
+<h3>Measured (wall clock from <code>evidence/timelog.txt</code>, minutes)</h3>
+<table><tr><th>Phase</th><th>Code-based (Bolt)</th><th>Low-code (Budibase)</th></tr>
+<tr><td>Setup</td><td>2 — open project, bookmark V17, run baseline tests (project already existed from earlier practices)</td><td>3 — start container, create local admin (image download failed ~20 min on network and was retried in the background; not counted)</td></tr>
+<tr><td>Implementation</td><td>3 — prompt sent 18:57, Bolt done 18:59/19:00</td><td>9 — table, screen, form, binding, table component (18:29–18:38)</td></tr>
+<tr><td>Debugging / repair</td><td>2 — fix prompt for D1–D3 (19:02–19:03)</td><td>6 — layout Grid→Flex (≈1.5), XSS escape fix incl. one failed save in a nested dialog (3.5), empty prod data (1)</td></tr>
+<tr><td>Testing</td><td>5 — V18 UI run, V19 verification, live-site run</td><td>5 — first T1–T8, security probes, two re-runs (preview + published)</td></tr>
+<tr><th>Total</th><th>≈ 12</th><th>≈ 23</th></tr>
+<tr><td>Shared, not counted</td><td colspan="2">contract + common tests 18 min (18:06–18:24); report writing</td></tr>
+<tr><td>Successful acceptance tests (final)</td><td class="pass">8 / 8 (first version 7 / 8)</td><td class="pass">8 / 8 (published version first 7 / 8)</td></tr>
+<tr><td>Defects found / fixed / unresolved</td><td>4 found (D1, D2, D3, R1) / 3 fixed / <b>1 unresolved</b> (R1, minor label)</td><td>3 found (layout, HTML injection, empty prod data) / 3 fixed / <b>0 unresolved</b> functional (open risks in section 7)</td></tr>
+<tr><td>AI prompts used</td><td>2 build + 1 read-only (Bolt Free: 14K daily tokens left)</td><td>0 (Budibase "Generate with AI" / "Switch on AI" not used)</td></tr>
+</table>
+<p class="note">There was a ~2 h pause in the session between 19:03 and 21:05 (no work); it is excluded. Low-code building was done with scripted browser steps, so a person clicking by hand would most likely need longer — that is an <b>impression</b>, not a measurement.</p>
+<h3>How changes are reviewed, exported and version-controlled</h3>
+<table><tr><th></th><th>Code-based (Bolt)</th><th>Low-code (Budibase Community)</th></tr>
+<tr><td>Review</td><td>Every AI change is a new Bolt version; I downloaded V18/V19 and read a plain-text diff (<code>evidence/code/diffs/v18_to_v19.diff</code>, 4 files, +77/−18)</td><td>Changes are saved live in the builder (undo/redo only). The logic is stored <b>base64-encoded</b> inside the app definition, so a diff of two exports is not readable without decoding</td></tr>
+<tr><td>Export</td><td>Project → Download (zip of a normal Vite + React project; runs with <code>npm ci && npm test</code>)</td><td>Settings → Export workspace (tar.gz with <code>db.txt</code> + client JS, 1.9 MB); restorable only into Budibase; warning that exports can contain datasource credentials (checked: none here)</td></tr>
+<tr><td>Version control</td><td>Bolt version history with bookmarks (V17 baseline, V18, V19); the code can go to Git/GitHub (this repository)</td><td>No Git integration; <b>Backups = Premium</b>, <b>Audit logs = Enterprise</b>; Dev and Prod data are separate</td></tr>
+</table>
+<h3>Measured vs. impressions</h3>
+<ul>
+<li><b>Measured:</b> times above, test scores, defect counts, npm audit counts, HTTP status codes, file sizes.</li>
+<li><b>Impression:</b> Budibase is quicker for a person who already knows the builder and needs a CRUD screen on an existing database; it felt slower here because the rule logic still had to be written as code, but without tests or a readable diff.</li>
+<li><b>Impression:</b> Bolt's speed depends on the prompt; the vague part of the first result (verdict label) only surfaced through manual UI testing.</li>
+</ul>
+
+<h2 class="pb">7. Task #07 — Security review (Lecture #12) and checklist</h2>
+<p>Scope: only my own artefacts — the Bolt project / my bolt.host site and the Budibase instance on my laptop. <b>No third-party service was scanned.</b> Runtime (DAST) checks were single manual requests and UI inputs against my own data, no fuzzing or load.</p>
+
+
+<table>
+<tr><th>#</th><th>Check</th><th>Code-based (Bolt.new, React/TS)</th><th>Low-code (Budibase 4.1.0, self-hosted)</th></tr>
+<tr><td>1</td><td>Input validation</td><td>Pure <code>validateInput</code> before any rule; covered by Vitest T4–T6 + edge tests</td><td>Number / date-picker controls + checks in the one JS binding; T4–T6 + empty duration pass</td></tr>
+<tr><td>2</td><td>Output handling / XSS (SAST + DAST)</td><td>No <code>dangerouslySetInnerHTML</code> / <code>innerHTML</code> / <code>eval</code> in <code>src</code> (grep); React escapes text</td><td><b>Found</b>: booking title reached the Markdown Text component as HTML (<code>&lt;img&gt;</code> rendered; <code>onerror</code> stripped by the sanitizer, no script ran). <b>Fixed</b> by escaping in the binding; re-test shows the tags as text. The Table component always showed the title as text</td></tr>
+<tr><td>3</td><td>Injection (SQL/NoSQL)</td><td>No database, no queries</td><td>Rows read through the platform Data Provider; no custom query or query string built from input</td></tr>
+<tr><td>4</td><td>Authentication / access</td><td>Public static site, no login, nothing to protect (fictional data)</td><td>App requires a Budibase login; anonymous row read → 302/401, anonymous write → 302; screen role &quot;Basic user&quot;, table access &quot;Admin user&quot;</td></tr>
+<tr><td>5</td><td>Hidden UI ≠ permission</td><td>n/a</td><td>Table component has Add/Edit/Delete off, but an admin session could still POST/DELETE rows through the API → real protection = table/role permissions</td></tr>
+<tr><td>6</td><td>Public sharing / hosting</td><td>Bolt Publish site is public by design (bolt.host); project shared as Viewer link</td><td>Bound to 127.0.0.1 only (LAN IP refused); not exposed to the internet</td></tr>
+<tr><td>7</td><td>Secrets</td><td>No <code>.env</code>, no keys, no network calls in <code>src</code></td><td>Platform secrets in <code>low-code/budibase/.env</code> (chmod 600, git-ignored); none in the app or its export (checked) ; export warning: may contain datasource credentials — this app has none</td></tr>
+<tr><td>8</td><td>Connectors / third-party</td><td>None</td><td>No external datasource; image bundles nginx, CouchDB, Redis, MinIO, Postgres + LiteLLM (AI proxy, unused) → larger attack surface</td></tr>
+<tr><td>9</td><td>SCA / updates</td><td><code>npm audit</code>: 0 production, 24 dev-tool vulnerabilities (2 low, 7 moderate, 13 high, 2 critical) — I own upgrades</td><td>Platform image <code>budibase/budibase:latest</code> (v4.1.0, built 2026-11-19); I own pulling updates; Docker Scout needs a Docker login, so no image CVE scan was run</td></tr>
+<tr><td>10</td><td>Data environments</td><td>Single bundle</td><td><b>Found</b>: Dev and Prod rows are separate → published app had 0 bookings and answered T2 &quot;Available&quot; (fail-open). Fixed with &quot;Seed from Dev&quot;; T1–T8 8/8 on the published app</td></tr>
+<tr><td>11</td><td>Trust in &quot;now&quot;</td><td>Client clock (both) — a user can change the device clock to bypass AC1; acceptable for a fictional checker, a real system must check on the server</td><td>same</td></tr>
+<tr><td>12</td><td>AI-agent least privilege</td><td>Bolt agent can edit every file and publish; I reviewed each diff and ran tests before publishing</td><td>Budibase AI features not enabled (&quot;Switch on AI&quot; left off)</td></tr>
+</table>
+
+<h3>SAST / SCA evidence (code-based)</h3>
+<pre># Code-based (V16 baseline) static checks — 2026-11-24 18:49
+
+## Raw-HTML / eval sinks in src (XSS/injection SAST grep)
+none found
+
+## Secrets / env usage in src
+none found
+no .env files
+
+## Network calls (fetch/axios/supabase)
+none found
+
+## npm audit (production deps)
+found 0 vulnerabilities
+
+## npm audit (all deps)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+## lint / typecheck
+lint exit 0
+typecheck exit 0
+
+## npm audit summary (all deps): 24 vulnerabilities (2 low, 7 moderate, 13 high, 2 critical) — all in dev/build tooling (vite/vitest/eslint chain); production deps: 0.</pre>
+<h3>DAST evidence (low-code, local instance only)</h3>
+<pre># Safe runtime checks against the LOCAL Budibase instance only (2026-11-24 18:41)
+
+## 1. Is the service reachable only from this machine?
+80/tcp -&gt; 127.0.0.1:10000
+
+LAN IP: 10.212.1.152
+curl http://10.212.1.152:10000/builder -&gt; 000 (000 = connection refused)
+
+## 2. Read rows WITHOUT a session (anonymous)
+GET/POST /api/ta_3c7f5472e2924beaae0aac26383b52c3/rows
+Redirecting to /.
+GET/POST /api/public/v1/tables/ta_3c7f5472e2924beaae0aac26383b52c3/rows/search
+Redirecting to /.
+Redirecting to /.
+
+## 3. Write rows WITHOUT a session
+Redirecting to /.
+
+## Status codes (anonymous)
+GET  /api/ta_3c7f5472e2924beaae0aac26383b52c3/rows -&gt; 302 location=http://127.0.0.1:10000/
+POST /api/ta_3c7f5472e2924beaae0aac26383b52c3/rows (write) -&gt; 302 location=http://127.0.0.1:10000/
+Result: no row data returned and no write accepted without a session (redirect to login).
+
+## 4. Output handling / XSS (stored value -&gt; Text component with Markdown)
+Temporary row added through the API with an admin session (booking_id XSS-TEST, 2026-12-02 09:00-10:00,
+title = &lt;img src=x onerror=&quot;window.__xss=1&quot;&gt;&lt;b&gt;bold&lt;/b&gt;), then a check for 2026-12-02 09:30 / 60 min.
+Observed result paragraph HTML: &lt;p&gt;Unavailable: overlaps with &quot;&lt;img src=&quot;x&quot;&gt;bold&quot; (09:00–10:00).&lt;/p&gt;
+- onerror handler removed by Budibase&#x27;s sanitizer, window.__xss stayed undefined, no dialog -&gt; no script execution.
+- BUT the &lt;img&gt; tag itself was rendered -&gt; HTML injection is possible (e.g. an external image / tracking pixel or
+  misleading markup) whenever a booking title contains HTML. Severity: low-medium. Fix: escape the title in the binding.
+Note: the API accepted a row write from the logged-in admin session even though the screen&#x27;s table has
+Add/Edit/Delete rows switched off -&gt; hiding UI controls is not an access control; table permissions are.
+Cleanup: XSS-TEST row deleted (HTTP 200); table back to B1, B2, B3 with the original values.
+
+## 5. After the fix (binding v2 escapes the title)
+Same temporary row, same check: &lt;p&gt;Unavailable: overlaps with &quot;&amp;lt;img src=x onerror=&quot;window.__xss=1&quot;&amp;gt;&amp;lt;b&amp;gt;bold&amp;lt;/b&amp;gt;&quot; (09:00–10:00).&lt;/p&gt;
+-&gt; shown as text, no element injected, window.__xss undefined. Row deleted again (HTTP 200); table = B1, B2, B3.
+Regression after the fix: T1-T8 8/8 pass + extra AC6 check (empty duration -&gt; DURATION_NOT_NUMBER).
+
+## 6. Published (prod) app
+Defect found: after Publish, the prod Bookings table was EMPTY (Budibase keeps Dev and Prod rows apart).
+T2 on the published app returned &#x27;Available ... AVAILABLE&#x27; (wrong, fails open). Fixed with Data tables -&gt; Prod -&gt; &#x27;Seed from Dev&#x27;; T1-T8 then 8/8 on the published app.
+Anonymous GET of the published app page: 200 -&gt; 
+Anonymous row read on prod app id: 401 -&gt; </pre>
+<div class="row"><figure><img src="../evidence/security/lowcode_xss_check.png"><figcaption>Before the fix: the booking title '&lt;img src=x onerror=…&gt;&lt;b&gt;bold&lt;/b&gt;' is rendered as HTML in the result (broken image). The table shows it as text.</figcaption></figure><figure><img src="../evidence/security/lowcode_xss_after_fix.png"><figcaption>After escaping in the binding: shown as plain text, no element injected.</figcaption></figure></div>
+<figure><img src="../evidence/security/bolt_publish_dialog_security_audit_locked.png" style="max-height:280px;width:auto"><figcaption>Bolt Publish dialog: the built-in 'Run security audit' is locked on the Free plan, so the security review relied on my own checks.</figcaption></figure>
+
+<h2 class="pb">8. Comparison matrix (completed with evidence) and recommendation</h2>
+<table><tr><th style="width:17%">Criterion</th><th>Code-based (Bolt.new, React/TS)</th><th>Low-code (Budibase Community)</th></tr>
+<tr><td>Functional tests</td><td><b>8 / 8</b> (V19 preview + live; first AI version 7 / 8) · unit 45 / 45</td><td><b>8 / 8</b> (dev preview first run; published app 7 / 8 until prod data was seeded)</td></tr>
+<tr><td>Build and repair time</td><td><b>≈ 12 min</b> (setup 2, implementation 3, repair 2, testing 5)</td><td><b>≈ 23 min</b> (setup 3, implementation 9, repair 6, testing 5)</td></tr>
+<tr><td>Customization</td><td>Full: any rule, message, layout; responsive card UI; reason-code badge</td><td>Fixed component set; rules needed a JS binding anyway; Grid layout clipped content until switched to Flex; bookings table scrolls sideways on a phone</td></tr>
+<tr><td>Security controls</td><td>Static site, no backend / secrets / user data; React escapes text; no raw-HTML sinks (grep); 0 production vulnerabilities, 24 dev-tool; site is public by design; Bolt security audit locked on Free</td><td>Login + roles; anonymous API read 401/302, write refused; 127.0.0.1 only. Found: HTML injection via Markdown text (fixed), admin session can write rows through the API although the UI hides it, fail-open on empty prod data (fixed). Platform bundles 6+ services that I must patch</td></tr>
+<tr><td>Versioning / portability</td><td>Bolt versions + readable diffs; standard Vite project, runs anywhere (<code>npm ci && npm test</code>), static hosting</td><td>No Git; export tar.gz only restorable into Budibase; logic base64-encoded; backups Premium, audit logs Enterprise; Dev/Prod data split must be managed</td></tr>
+<tr><td>Ongoing cost</td><td>$0: Bolt Free (token-limited: 3 prompts left 14K daily tokens) + free bolt.host; Pro needed for private sharing / security audit</td><td>$0 licence (Community self-host) but I run and update a 1.2 GB Docker image with nginx, CouchDB, Redis, MinIO, Postgres, LiteLLM; Budibase Cloud from $299 / month</td></tr>
+</table>
+<div class="decision"><b>Recommendation: keep the code-based solution for the Smart Campus checker.</b> Both reached 8 / 8, but the code-based version did it in about half the measured time, its rules are covered by 45 re-runnable tests, changes are reviewable as plain diffs, and the deployed result is a static page with nothing to attack. The low-code version is a valid fast prototype, and its login/role model would matter for real data — but in this test it produced the more dangerous failures (fail-open after publishing, HTML injection, a write path the UI does not show), and its logic cannot be unit-tested or diffed. Use low-code only for internal CRUD screens on existing databases, with two mandatory controls: seed/verify Prod data after every publish, and enforce permissions on the table/API, not in the UI.</div>
+<p class="muted">The decision is defended with the observed evidence above; Bolt's own comparison (section 9) reached the same recommendation, but I checked its claims separately.</p>
+
+<h2 class="pb">9. AI-use reflection (Bolt.new)</h2>
+<h3>Prompt 3 — comparison and review (the slide's suggested prompt, Plan mode = read-only)</h3>
+<p>Prompt: <code>evidence/prompts/P2_comparison_prompt.txt</code> (the suggested prompt + a description of the Budibase app + my measured evidence). Bolt's full answer:</p>
+<pre class="answer">[Prompt] = P2_comparison_prompt.txt (attachment) + &quot;Compare the two implementations as described in the attached prompt (read-only review).&quot;
+[Bolt answer, Standard mode, Plan ON (no files changed), 24 Nov ~21:08-21:10]
+
+I have everything needed: the contract source, the review checklist, and both implementations&#x27; evidence. Here is the comparison.
+
+1. Comparison per criterion
+
+Correctness — code-based edges ahead, but neither is clean.
+
+Code-based: 45/45 unit tests, UI 8/8 in preview and live after v19, lint/typecheck/build pass. But two defects were caught only by manual UI testing (OVERLAP mislabelled, date-blind overlap), and one remains: &quot;free from 23:30 to 24:30&quot; — 24:30 is not a valid clock label. Evidence: v19 test logs plus your UI checks; the unit suite passes despite this defect because no test asserts that message.
+Low-code: T1–T8 8/8 on the first run in dev — genuinely faster to a correct dev preview. But the published app initially answered T2 &quot;Available&quot; on an empty table — a fail-open correctness failure caused by the deployment process, not the logic. Evidence: your post-publish test of T2.
+The pattern: the code-based failure modes were in the UI layer and were caught by tests plus one fix cycle; the low-code failure mode was environmental and silently produced a wrong answer with all previews green.
+
+Maintainability — code-based clearly ahead.
+
+Code-based: pure functions separated from presentation, 45 versioned tests that rerun in under a second, and any editor/diff tooling works on plain source. Evidence: the files in src/lib/contract/ and the test run times in your log.
+Low-code: the core logic is a ~25-line JavaScript binding stored base64-encoded inside the app definition, edited live in the builder with no version history. Evidence: your description — the only way to review or diff that logic is to decode it out of a tar.gz export. The base64 encoding actively hides logic from review, and there is no way to answer &quot;what changed since last week.&quot;
+
+Portability — code-based ahead.
+
+Code-based: the artefact is standard source plus a static build; it runs on any static host (you already publish it). Evidence: the dist/ output and live site re-test in your log.
+Low-code: the only portable artefact is a workspace export (tar.gz) tied to Budibase Community 4.1.0. That is backup-grade, not migration-grade — restoring requires a compatible Budibase version. Evidence: your own framing; a test worth running is listed under risks below.
+
+Cost — the measurements contradict the label.
+
+Your wall-clock totals: low-code ≈ 23 min (2 setup + 10 build + 4 tests + 4 security fix + 3 publish fix), code-based ≈ 11.5 min (1.5 + 5 verify + 1 fix + 3 verify + 2 publish). Even excluding the failed image pulls, the low-code path cost roughly twice as much to reach the same verified state.
+Ongoing cost also differs: the Budibase stack runs six services (nginx, CouchDB, Redis, MinIO, Postgres, LiteLLM) that need updates and backups; the code-based app is static files with no server. Evidence: your component list; npm audit 0 production vulnerabilities.
+
+Security — different shapes of risk; low-code is not secure by default.
+
+Code-based: a static SPA with no backend, no secrets, and no user data; booking titles are build-time constants, so there is no injection sink reachable by an attacker (React escapes ordinary interpolation; I checked the screen — no escape hatches like dangerouslySetInnerHTML). Evidence: source review of ContractChecker.tsx; npm audit 0 production issues. The 24 dev-tool vulnerabilities affect the build pipeline, not the deployed page.
+Low-code: two demonstrated weaknesses. First, the Markdown component rendered a stored &lt;img&gt; tag as HTML — the title is attacker-controllable if anyone but you maintains bookings, and the fix (escaping inside one binding) covers only the path you re-tested. Second, UI-level hiding of add/edit/delete did not stop an admin session from writing via the API — the interface constrains the user, the API did not. Binding to 127.0.0.1 limits exposure to people with host access; it is a network control, not an authorization control. Evidence: your injection test and admin POST/DELETE results.
+2. Unsupported assumptions in the evidence
+&quot;8/8 on the first run&quot; for low-code applies to dev preview only; the published app failed T2 until seeded. The evidence does not show a first-run pass in production.
+The npm audit counts are not exploitability assessments — 24 dev vulnerabilities are unexamined, and 0 production issues assumes the audit tool&#x27;s reachability model.
+The low-code time log excludes cold-start cost: the first image pull failed several times, so the ~2 min setup assumes a warm cache.
+The escaping fix is assumed to cover all render paths for booking titles; only the Markdown component path was re-tested.
+&quot;Anonymous API refused&quot; was tested for one role; whether any non-admin authenticated role exists, and what it can do, was not tested.
+UI 8/8 for the code-based app was measured in one browser/timezone; the date logic parses datetime-local as local time, so cross-timezone behaviour is asserted, not observed.
+45/45 unit tests is treated as defect-free; it demonstrably is not (the 24:30 message defect passes the suite).
+3. Risk list with required observable evidence
+Fail-open on empty data (low-code, high). Empty prod table → &quot;Available&quot;. To verify: on any fresh deployment, clear the table and re-run T2; a correct implementation must fail closed (error or OVERLAP, never AVAILABLE). Also test with the backend stopped.
+API writes bypass UI restrictions (low-code, high if multi-user). Admin session wrote/deleted rows despite hidden controls. To verify: create a least-privilege user, obtain its session token, attempt POST/DELETE on the Bookings API directly; confirm 403 at the server, not just a missing button.
+Injection class only partially fixed (low-code, medium). &lt;img&gt; rendered by Markdown; onerror stripped by sanitizer; fix applied in one binding. To verify: store &lt;img src=x onerror=alert(1)&gt; and &lt;a href=&quot;javascript:alert(1)&quot;&gt; as a title, render through every component that displays titles (table, detail, markdown), and inspect the DOM for injected elements and any execution.
+Unversioned, opaque logic edits (low-code, medium). No git; binding base64-encoded. To verify: make a small logic edit, export the workspace, and attempt to produce a readable diff against the previous export; then restore that export on a clean instance and re-run T1–T8.
+Invalid end-time label (code-based, low). 23:30 + 60 shows &quot;to 24:30&quot;. To verify: run that input in the UI and observe the message; add a unit assertion for the end label.
+Local-timezone dependence (both, low–medium). Code-based parses the picker value as local time; Budibase picker is set to &quot;ignore time zones&quot;. To verify: run each app with the browser (or host) timezone set to two zones at least 6 hours apart, run T2 and T7, and compare the rendered times and results.
+Dev-dependency vulnerabilities (code-based, low). 24 audit findings in build tooling. To verify: read npm audit output and confirm none of the affected packages ship in dist/ (check the bundle or source maps); re-run after any dependency update.
+Deployment drift between dev and prod (low-code, medium). Data separation caused the fail-open incident. To verify: change a booking in dev, publish, and confirm the published app reflects the definition change but not unsynced data — and document the seeding step as mandatory.
+4. Recommendation
+
+For this scenario — one fictional room, read-only checks, no real data, no login — the code-based implementation is the one to keep. It reached the same verified correctness in about half the measured time, its logic is reviewable, diffable, and covered by 45 rerunnable tests, and its deployed footprint is a static page with no server to attack. The low-code implementation is a legitimate fast prototype, but its evidence shows the characteristic low-code risks in miniature: a fail-open production deployment, an authenticated write path the UI does not show, unversioned opaque logic, and a six-service stack to maintain. If it is retained for comparison, apply the two mandatory controls before trusting it: fail-closed behaviour on missing data and server-side role permissions on the API.
+
+Summary: I reviewed both implementations against the same contract using your test evidence and a source review of the contract code (read-only, nothing changed). The code-based app wins on correctness assurance, maintainability, portability, and measured cost; the low-code app was faster to a dev-preview pass but its real failures were deployment and authorization gaps. The highest-priority items to verify next are the fail-open-on-empty-data behaviour and the authenticated API write path on the Budibase side, plus the 24:30 label defect on the code-based side.</pre>
+<h3>How I checked Bolt's claims</h3>
+<table><tr><th>Bolt claim</th><th>My check</th><th>Verdict</th></tr>
+<tr><td>"Implemented exactly", 41/41, lint/typecheck/build pass (P1)</td><td>Re-ran locally: identical numbers</td><td class="pass">confirmed</td></tr>
+<tr><td>"Result card showing the verdict" (P1)</td><td>UI T2 showed "Invalid input" for OVERLAP; date ignored</td><td class="fail">incomplete — 2 defects</td></tr>
+<tr><td>"All three defects are fixed", 45/45 (P1b)</td><td>Re-ran locally + UI 8/8 + probes; midnight label still "24:30"</td><td class="pass">confirmed</td> </tr>
+<tr><td>"no escape hatches like dangerouslySetInnerHTML" (P2)</td><td>grep over <code>src</code>: none</td><td class="pass">confirmed</td></tr>
+<tr><td>Budibase logic "edited live … with no version history" (P2)</td><td>Backups = Premium, Audit logs = Enterprise, no Git; builder has only undo/redo</td><td class="pass">confirmed for the free edition</td></tr>
+<tr><td>"Injection fix covers only the path you re-tested" (P2)</td><td>XSS screenshot shows the Table component renders the same title as text → only the Markdown text was affected</td><td class="warn">partly verified (Table safe, other components not tested)</td></tr>
+<tr><td>"half the measured time" (P2)</td><td>Numbers are mine, but the code-based side reused a project built over six practices and Bolt did the typing; not a like-for-like comparison</td><td class="warn">plausible, with a bias</td></tr>
+<tr><td>Fail-open on empty data / API writes / timezone dependence (P2 risks)</td><td>First two observed by me; timezone not tested (one browser, Asia/Almaty)</td><td>2 confirmed, 1 unverified</td></tr>
+</table>
+<h3>Reflection</h3>
+<ul>
+<li><b>What helped:</b> Bolt turned the written contract into separated, typed modules and 15 tests in about 1.5 minutes, reported real command output, and its read-only review listed unsupported assumptions honestly (e.g. "8/8 first run" applies to the dev preview only).</li>
+<li><b>What went wrong:</b> the first AI version passed every unit test and still failed T2 in the running UI and ignored dates. The fix only worked well because my prompt contained exact reproductions. <b>Green tests from the AI are not evidence of correct behaviour</b>; UI acceptance tests on the same contract were what found the defects.</li>
+<li><b>Low-code is not secure because it is low-code:</b> the platform's sanitizer stopped script execution, but HTML injection, a hidden write path and a fail-open deployment were all real and were found only by testing.</li>
+<li><b>Least privilege for the AI agent:</b> Bolt can edit every file and publish; I kept the review prompt in Plan mode, bookmarked the baseline, read the diff and re-ran the checks before republishing. No secrets were placed in prompts or screenshots (the Budibase secrets live in a git-ignored <code>.env</code>).</li>
+</ul>
+
+<h2>10. Incomplete or simulated behaviour (clearly labelled)</h2>
+<ul>
+<li><b>Nothing in either app is simulated</b>: both evaluate the inputs with real logic on the fictional data; all results above are observed outputs.</li>
+<li><b>Low-code — local only:</b> the published Budibase app runs on my laptop (<code>127.0.0.1:10000</code>); there is no public link. The submission therefore includes the Budibase export and screenshots instead of a live URL.</li>
+<li><b>Low-code — no automated tests:</b> T1–T8 were run through the UI only (no test runner for bindings).</li>
+<li><b>Low-code — mobile:</b> usable at 390 px, but the bookings table scrolls sideways.</li>
+<li><b>Code-based — open defect R1:</b> end label "24:30" for intervals crossing midnight (decision itself correct).</li>
+<li><b>Both:</b> "now" is the browser clock; a user who changes the device clock can bypass AC1 (acceptable for fictional data, a real system must check on the server). Timezone behaviour was not tested.</li>
+<li><b>Not done:</b> container image CVE scan (Docker Scout requires a Docker login); Bolt's built-in security audit (paid).</li>
+</ul>
+<h2>Appendix — time log</h2>
+<pre>2026-11-24 18:05:59 START practice12 setup
+2026-11-24 18:24:25 CONTRACT written (contract/CONTRACT.md, test-cases.json)
+2026-11-24 18:26:29 LOWCODE setup start: docker run budibase (image already pulled)
+2026-11-24 18:28:11 LOWCODE Budibase up at http://127.0.0.1:10000
+2026-11-24 18:37:56 LOWCODE first build complete (table, screen, form, JS binding, table) -&gt; start testing
+2026-11-24 18:41:33 LOWCODE tests T1-T8 run: 8/8 pass (first run, no debugging needed; ~5 min fixing layout Grid-&gt;Flex before tests)
+2026-11-24 18:42:43 LOWCODE security: HTML-injection found in result text; starting repair (escape title)
+2026-11-24 18:46:15 LOWCODE repair done (escape fix saved after 1 failed save attempt in nested drawer), XSS re-check OK, regression T1-T8 8/8
+2026-11-24 18:48:51 LOWCODE DEFECT: published (prod) app has empty Bookings (dev/prod data separated) -&gt; T2 returns AVAILABLE (wrong). Repair: import CSV into Prod table
+2026-11-24 18:49:46 LOWCODE prod data seeded from Dev; published app T1-T8 8/8; export saved
+2026-11-24 18:54:58 CODE track start: Bolt signed in (user did Google login)
+2026-11-24 18:57:07 CODE baseline frozen in Bolt (V17 bookmarked, npm test 26/26)
+2026-11-24 18:57:13 CODE P1 implementation prompt sent to Bolt
+2026-11-24 19:00:17 CODE Bolt finished V18 (prompt 18:58 -&gt; V18 18:59; Bolt reports 41/41, lint/typecheck/build ok) -&gt; verify
+2026-11-24 19:01:58 CODE V18 verified: unit 41/41, UI 7/8 (T2 label), defects D1 label, D2 date ignored, D3 requested text -&gt; sending fix prompt
+2026-11-24 19:03:43 CODE fix prompt sent 19:02, Bolt V19 at 19:03 (reports 45/45) -&gt; verify
+2026-11-24 21:05:31 CODE V19 verified: unit 45/45, UI 8/8, 1 minor unresolved (24:30 label). Next: publish
+2026-11-24 21:07:21 CODE published V19 to live site; live T1-T8 8/8
+NOTE: gap 19:03:43 -&gt; 21:05:31 = session paused (~2 h, no work done; Playwright artefacts show the V19 export at ~19:04 and the next action at 21:04). Excluded from effort measurements.
+2026-11-24 21:10:18 P2 comparison prompt answered by Bolt (Plan mode, read-only, ~2 min); 14K daily tokens left</pre>
+<h2>Appendix — fix diff V18 → V19 (from the Bolt exports)</h2>
+<pre>diff --git a/../../v18/project/src/components/ContractChecker.tsx b/src/components/ContractChecker.tsx
+index b396e16..35a66bf 100644
+--- a/../../v18/project/src/components/ContractChecker.tsx
++++ b/src/components/ContractChecker.tsx
+@@ -2,6 +2,7 @@ import { useState } from &#x27;react&#x27;;
+ import { CalendarClock, Building2, CircleCheck, CircleX, AlertCircle, Lock } from &#x27;lucide-react&#x27;;
+ import { checkContract } from &#x27;@/lib/contract/availability&#x27;;
+ import { BOOKINGS, CONTRACT_DAY, ROOM_NAME } from &#x27;@/lib/contract/data&#x27;;
++import { verdictForReason } from &#x27;@/lib/contract/verdict&#x27;;
+ import type { ReasonCode } from &#x27;@/lib/contract/validation&#x27;;
+ 
+ const REASON_TONE: Record&lt;ReasonCode, &#x27;ok&#x27; | &#x27;error&#x27; | &#x27;warn&#x27;&gt; = {
+@@ -39,16 +40,19 @@ export default function ContractChecker() {
+   };
+ 
+   const tone = result ? TONE_STYLES[REASON_TONE[result.reasonCode]] : null;
+-  const verdict =
+-    result === null
+-      ? null
+-      : result.reasonCode === &#x27;AVAILABLE&#x27;
+-        ? &#x27;Available&#x27;
+-        : REASON_TONE[result.reasonCode] === &#x27;error&#x27;
+-          ? &#x27;Invalid input&#x27;
+-          : &#x27;Unavailable&#x27;;
++  const verdict = result ? verdictForReason(result.reasonCode) : null;
+ 
+-  const startLabel = start ? start.replace(&#x27;T&#x27;, &#x27; &#x27;) : &#x27;—&#x27;;
++  const requestedLabel = (() =&gt; {
++    if (!start) return null;
++    const startDate = new Date(start);
++    if (Number.isNaN(startDate.getTime())) return null;
++    const pad = (n: number) =&gt; String(n).padStart(2, &#x27;0&#x27;);
++    const date = `${startDate.getFullYear()}-${pad(startDate.getMonth() + 1)}-${pad(startDate.getDate())}`;
++    const from = `${pad(startDate.getHours())}:${pad(startDate.getMinutes())}`;
++    const end = new Date(startDate.getTime() + (Number.isNaN(Number(duration)) ? 0 : Number(duration)) * 60000);
++    const to = `${pad(end.getHours())}:${pad(end.getMinutes())}`;
++    return `${date} ${from}–${to}`;
++  })();
+ 
+   return (
+     &lt;div className=&quot;min-h-screen bg-gradient-to-b from-slate-50 to-gray-100&quot;&gt;
+@@ -155,9 +159,9 @@ export default function ContractChecker() {
+                     &lt;/code&gt;
+                   &lt;/div&gt;
+                   &lt;p className={`mt-0.5 break-words text-sm ${tone.sub}`}&gt;{result.message}&lt;/p&gt;
+-                  {result.reasonCode === &#x27;AVAILABLE&#x27; &amp;&amp; (
++                  {result.reasonCode === &#x27;AVAILABLE&#x27; &amp;&amp; requestedLabel &amp;&amp; (
+                     &lt;p className=&quot;mt-1 text-sm text-green-700&quot;&gt;
+-                      Requested: {startLabel}, {start ? result.message.match(/\d{2}:\d{2}/)?.[0] : &#x27;&#x27;} onward.
++                      Requested: {requestedLabel}
+                     &lt;/p&gt;
+                   )}
+                 &lt;/div&gt;
+diff --git a/../../v18/project/src/lib/contract/availability.ts b/src/lib/contract/availability.ts
+index ddf7257..0a073af 100644
+--- a/../../v18/project/src/lib/contract/availability.ts
++++ b/src/lib/contract/availability.ts
+@@ -1,4 +1,4 @@
+-import { ContractBooking } from &#x27;./data&#x27;;
++import { CONTRACT_DAY, ContractBooking } from &#x27;./data&#x27;;
+ import { ContractInput, ReasonCode, validateInput } from &#x27;./validation&#x27;;
+ 
+ export interface ContractResult {
+@@ -17,6 +17,10 @@ export function minutesFromDayStart(date: Date): number {
+   return date.getHours() * 60 + date.getMinutes();
+ }
+ 
++// All fictional bookings are on CONTRACT_DAY; express them as absolute local
++// minutes so comparisons account for both the date and the time of day.
++const BOOKING_DAY_START_MIN = new Date(`${CONTRACT_DAY}T00:00`).getTime() / 60000;
++
+ // Pure: validation first, then ROOM_BLOCKED, then OVERLAP (touching edges are
+ // not an overlap), else AVAILABLE. Never modifies the bookings array.
+ export function checkContract(
+@@ -37,11 +41,13 @@ export function checkContract(
+     };
+   }
+ 
+-  const start = minutesFromDayStart(new Date(input.start));
+-  const end = start + input.durationMinutes;
+-  const conflict = bookings.find(
+-    (b) =&gt; start &lt; b.end &amp;&amp; b.start &lt; end
+-  );
++  const startMin = new Date(input.start).getTime() / 60000;
++  const endMin = startMin + input.durationMinutes;
++  const conflict = bookings.find((b) =&gt; {
++    const bStart = BOOKING_DAY_START_MIN + b.start;
++    const bEnd = BOOKING_DAY_START_MIN + b.end;
++    return startMin &lt; bEnd &amp;&amp; bStart &lt; endMin;
++  });
+   if (conflict) {
+     return {
+       available: false,
+@@ -50,9 +56,10 @@ export function checkContract(
+     };
+   }
+ 
++  const startOfDay = minutesFromDayStart(new Date(input.start));
+   return {
+     available: true,
+     reasonCode: &#x27;AVAILABLE&#x27;,
+-    message: `Available: Room A-101 is free from ${toLabel(start)} to ${toLabel(end)}.`,
++    message: `Available: Room A-101 is free from ${toLabel(startOfDay)} to ${toLabel(startOfDay + input.durationMinutes)}.`,
+   };
+ }
+diff --git a/../../v18/project/src/lib/contract/contract.test.ts b/src/lib/contract/contract.test.ts
+index 1546107..1390547 100644
+--- a/../../v18/project/src/lib/contract/contract.test.ts
++++ b/src/lib/contract/contract.test.ts
+@@ -1,5 +1,6 @@
+ import { describe, it, expect } from &#x27;vitest&#x27;;
+ import { checkContract } from &#x27;./availability&#x27;;
++import { verdictForReason } from &#x27;./verdict&#x27;;
+ import { BOOKINGS, TEST_NOW, ROOM_NAME } from &#x27;./data&#x27;;
+ import type { ContractBooking } from &#x27;./data&#x27;;
+ 
+@@ -138,3 +139,35 @@ describe(&#x27;Practice #12 contract (extra edge tests)&#x27;, () =&gt; {
+     expect(ROOM_NAME).toBe(&#x27;Room A-101 (fictional)&#x27;);
+   });
+ });
++
++describe(&#x27;Practice #12 contract (D1-D3 regression tests)&#x27;, () =&gt; {
++  it(&#x27;D2: a slot on a different date never overlaps (2026-12-05T12:30 + 60 -&gt; AVAILABLE)&#x27;, () =&gt; {
++    const result = checkContract({ start: &#x27;2026-12-05T12:30&#x27;, durationMinutes: 60, roomBlocked: false }, NOW, BOOKINGS);
++    expect(result.reasonCode).toBe(&#x27;AVAILABLE&#x27;);
++    expect(result.available).toBe(true);
++  });
++
++  it(&#x27;D2: an interval crossing midnight is free when no booking spans it (2026-12-01T23:30 + 60 -&gt; AVAILABLE)&#x27;, () =&gt; {
++    const result = checkContract({ start: &#x27;2026-12-01T23:30&#x27;, durationMinutes: 60, roomBlocked: false }, NOW, BOOKINGS);
++    expect(result.reasonCode).toBe(&#x27;AVAILABLE&#x27;);
++    expect(result.available).toBe(true);
++  });
++
++  it(&#x27;D2: a real overlap on the booking day still counts (2026-12-01T16:00 + 60 -&gt; OVERLAP, Robotics club)&#x27;, () =&gt; {
++    const result = checkContract({ start: &#x27;2026-12-01T16:00&#x27;, durationMinutes: 60, roomBlocked: false }, NOW, BOOKINGS);
++    expect(result.reasonCode).toBe(&#x27;OVERLAP&#x27;);
++    expect(result.available).toBe(false);
++    expect(result.message).toMatch(/Robotics club/);
++  });
++
++  it(&#x27;D1: verdict mapping for all 8 reason codes&#x27;, () =&gt; {
++    expect(verdictForReason(&#x27;AVAILABLE&#x27;)).toBe(&#x27;Available&#x27;);
++    expect(verdictForReason(&#x27;ROOM_BLOCKED&#x27;)).toBe(&#x27;Unavailable&#x27;);
++    expect(verdictForReason(&#x27;OVERLAP&#x27;)).toBe(&#x27;Unavailable&#x27;);
++    expect(verdictForReason(&#x27;START_REQUIRED&#x27;)).toBe(&#x27;Invalid input&#x27;);
++    expect(verdictForReason(&#x27;START_IN_PAST&#x27;)).toBe(&#x27;Invalid input&#x27;);
++    expect(verdictForReason(&#x27;DURATION_NOT_NUMBER&#x27;)).toBe(&#x27;Invalid input&#x27;);
++    expect(verdictForReason(&#x27;DURATION_NOT_POSITIVE&#x27;)).toBe(&#x27;Invalid input&#x27;);
++    expect(verdictForReason(&#x27;DURATION_TOO_LONG&#x27;)).toBe(&#x27;Invalid input&#x27;);
++  });
++});
+diff --git a/src/lib/contract/verdict.ts b/src/lib/contract/verdict.ts
+new file mode 100644
+index 0000000..6da202f
+--- /dev/null
++++ b/src/lib/contract/verdict.ts
+@@ -0,0 +1,15 @@
++import type { ReasonCode } from &#x27;./validation&#x27;;
++
++export type Verdict = &#x27;Available&#x27; | &#x27;Unavailable&#x27; | &#x27;Invalid input&#x27;;
++
++export function verdictForReason(code: ReasonCode): Verdict {
++  switch (code) {
++    case &#x27;AVAILABLE&#x27;:
++      return &#x27;Available&#x27;;
++    case &#x27;ROOM_BLOCKED&#x27;:
++    case &#x27;OVERLAP&#x27;:
++      return &#x27;Unavailable&#x27;;
++    default:
++      return &#x27;Invalid input&#x27;;
++  }
++}</pre>
+</body></html>

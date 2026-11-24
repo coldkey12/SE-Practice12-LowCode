@@ -1,0 +1,16 @@
+{"version":"Bolt Version 19 (after one fix prompt)","runAt":"2026-11-24 19:06, Bolt preview, real clock",
+ "unit":"npm test 45/45 (26 old + 19 contract incl. T1-T8 and D1/D2 regressions); lint, typecheck, build pass; npm audit --omit=dev 0",
+ "ui":[
+ {"id":"T1","observed":"Available | AVAILABLE | Available: Room A-101 is free from 17:00 to 18:00. | Requested: 2026-12-01 17:00–18:00","pass":true},
+ {"id":"T2","observed":"Unavailable | OVERLAP | Unavailable: overlaps with \"Study group\" (12:00–13:00).","pass":true},
+ {"id":"T3","observed":"Unavailable | ROOM_BLOCKED | Unavailable: the room is blocked.","pass":true},
+ {"id":"T4","observed":"Invalid input | DURATION_NOT_POSITIVE | Duration must be greater than 0 minutes.","pass":true},
+ {"id":"T5","observed":"Invalid input | DURATION_TOO_LONG | Duration must be at most 120 minutes.","pass":true},
+ {"id":"T6","observed":"Invalid input | START_IN_PAST | Start time must be in the future.","pass":true},
+ {"id":"T7","observed":"Available | AVAILABLE | Available: Room A-101 is free from 13:00 to 15:00. | Requested: 2026-12-01 13:00–15:00","pass":true},
+ {"id":"T8","observed":"Existing bookings list identical before/after T1-T7","pass":true}],
+ "probes":[
+ {"input":"2026-12-05T12:30 + 60","observed":"Available | AVAILABLE (D2 fixed)"},
+ {"input":"2026-12-01T23:30 + 60","observed":"Available | AVAILABLE | message says 'free from 23:30 to 24:30' while Requested line says 23:30–00:30","defect":"R1 (minor, unresolved): end label not wrapped past midnight"},
+ {"input":"empty duration","observed":"Invalid input | DURATION_NOT_NUMBER"}],
+ "summary":"UI 8/8, unit 45/45, 1 minor unresolved defect (R1)"}

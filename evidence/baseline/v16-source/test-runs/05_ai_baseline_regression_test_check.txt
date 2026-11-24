@@ -1,0 +1,32 @@
+
+ RUN  v2.1.9 /home/project
+
+ × src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > REG: endpoint touches are never overlaps (AC4 boundaries)
+   → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/lib/availability.test.ts > checkAvailability — AC1–AC5 (AC6 is UI/layout, not testable via this function) > REG: endpoint touches are never overlaps (AC4 boundaries)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ eval src/lib/availability.test.ts:392:72
+    390|     // touching after, touching before, identical, and true overlap
+    391|     expect(checkAvailability(room, 660, 720, NOW, bookings).available)…
+    392|     expect(checkAvailability(room, 540, 600, NOW, bookings).available)…
+       |                                                                        ^
+    393|     expect(checkAvailability(room, 600, 660, NOW, bookings).available)…
+    394|     expect(checkAvailability(room, 630, 690, NOW, bookings).available)…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 22 skipped (23)
+   Start at  19:14:43
+   Duration  1.69s (transform 68ms, setup 0ms, collect 76ms, tests 7ms, environment 0ms, prepare 205ms)
+

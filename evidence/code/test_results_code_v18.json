@@ -1,0 +1,14 @@
+{"version":"Bolt Version 18 (first AI implementation)","runAt":"2026-11-24 19:01-19:03, Bolt preview (webcontainer), real clock",
+ "unit":"npm test 41/41 (26 old + 15 contract), lint/typecheck/build pass (Bolt and local)",
+ "ui":[
+ {"id":"T1","observed":"Available | AVAILABLE | Available: Room A-101 is free from 17:00 to 18:00.","pass":true},
+ {"id":"T2","observed":"Invalid input | OVERLAP | Unavailable: overlaps with \"Study group\" (12:00–13:00).","pass":false,"why":"reason code and message correct, but the verdict label says 'Invalid input' instead of 'Unavailable' (defect D1)"},
+ {"id":"T3","observed":"Unavailable | ROOM_BLOCKED | Unavailable: the room is blocked.","pass":true},
+ {"id":"T4","observed":"Invalid input | DURATION_NOT_POSITIVE | Duration must be greater than 0 minutes.","pass":true},
+ {"id":"T5","observed":"Invalid input | DURATION_TOO_LONG | Duration must be at most 120 minutes.","pass":true},
+ {"id":"T6","observed":"Invalid input | START_IN_PAST | Start time must be in the future.","pass":true},
+ {"id":"T7","observed":"Available | AVAILABLE | Available: Room A-101 is free from 13:00 to 15:00.","pass":true},
+ {"id":"T8","observed":"Existing bookings list identical before/after T1-T7","pass":true}],
+ "extraProbe":{"input":"2026-12-05T12:30, 60 min","observed":"Invalid input | OVERLAP | overlaps with \"Study group\"","expected":"Available (Study group is on 2026-12-01)","defect":"D2: rules compare only time of day, ignore the date"},
+ "otherDefect":"D3: result line 'Requested: 2026-12-01 13:00, 13:00 onward.' hides the end time",
+ "summary":"UI 7/8 (T2 fails on the verdict label); unit tests 41/41 did not catch D1/D2 because they test codes only and all cases are on 2026-12-01"}

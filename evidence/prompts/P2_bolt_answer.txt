@@ -1,0 +1,55 @@
+[Prompt] = P2_comparison_prompt.txt (attachment) + "Compare the two implementations as described in the attached prompt (read-only review)."
+[Bolt answer, Standard mode, Plan ON (no files changed), 24 Nov ~21:08-21:10]
+
+I have everything needed: the contract source, the review checklist, and both implementations' evidence. Here is the comparison.
+
+1. Comparison per criterion
+
+Correctness — code-based edges ahead, but neither is clean.
+
+Code-based: 45/45 unit tests, UI 8/8 in preview and live after v19, lint/typecheck/build pass. But two defects were caught only by manual UI testing (OVERLAP mislabelled, date-blind overlap), and one remains: "free from 23:30 to 24:30" — 24:30 is not a valid clock label. Evidence: v19 test logs plus your UI checks; the unit suite passes despite this defect because no test asserts that message.
+Low-code: T1–T8 8/8 on the first run in dev — genuinely faster to a correct dev preview. But the published app initially answered T2 "Available" on an empty table — a fail-open correctness failure caused by the deployment process, not the logic. Evidence: your post-publish test of T2.
+The pattern: the code-based failure modes were in the UI layer and were caught by tests plus one fix cycle; the low-code failure mode was environmental and silently produced a wrong answer with all previews green.
+
+Maintainability — code-based clearly ahead.
+
+Code-based: pure functions separated from presentation, 45 versioned tests that rerun in under a second, and any editor/diff tooling works on plain source. Evidence: the files in src/lib/contract/ and the test run times in your log.
+Low-code: the core logic is a ~25-line JavaScript binding stored base64-encoded inside the app definition, edited live in the builder with no version history. Evidence: your description — the only way to review or diff that logic is to decode it out of a tar.gz export. The base64 encoding actively hides logic from review, and there is no way to answer "what changed since last week."
+
+Portability — code-based ahead.
+
+Code-based: the artefact is standard source plus a static build; it runs on any static host (you already publish it). Evidence: the dist/ output and live site re-test in your log.
+Low-code: the only portable artefact is a workspace export (tar.gz) tied to Budibase Community 4.1.0. That is backup-grade, not migration-grade — restoring requires a compatible Budibase version. Evidence: your own framing; a test worth running is listed under risks below.
+
+Cost — the measurements contradict the label.
+
+Your wall-clock totals: low-code ≈ 23 min (2 setup + 10 build + 4 tests + 4 security fix + 3 publish fix), code-based ≈ 11.5 min (1.5 + 5 verify + 1 fix + 3 verify + 2 publish). Even excluding the failed image pulls, the low-code path cost roughly twice as much to reach the same verified state.
+Ongoing cost also differs: the Budibase stack runs six services (nginx, CouchDB, Redis, MinIO, Postgres, LiteLLM) that need updates and backups; the code-based app is static files with no server. Evidence: your component list; npm audit 0 production vulnerabilities.
+
+Security — different shapes of risk; low-code is not secure by default.
+
+Code-based: a static SPA with no backend, no secrets, and no user data; booking titles are build-time constants, so there is no injection sink reachable by an attacker (React escapes ordinary interpolation; I checked the screen — no escape hatches like dangerouslySetInnerHTML). Evidence: source review of ContractChecker.tsx; npm audit 0 production issues. The 24 dev-tool vulnerabilities affect the build pipeline, not the deployed page.
+Low-code: two demonstrated weaknesses. First, the Markdown component rendered a stored <img> tag as HTML — the title is attacker-controllable if anyone but you maintains bookings, and the fix (escaping inside one binding) covers only the path you re-tested. Second, UI-level hiding of add/edit/delete did not stop an admin session from writing via the API — the interface constrains the user, the API did not. Binding to 127.0.0.1 limits exposure to people with host access; it is a network control, not an authorization control. Evidence: your injection test and admin POST/DELETE results.
+2. Unsupported assumptions in the evidence
+"8/8 on the first run" for low-code applies to dev preview only; the published app failed T2 until seeded. The evidence does not show a first-run pass in production.
+The npm audit counts are not exploitability assessments — 24 dev vulnerabilities are unexamined, and 0 production issues assumes the audit tool's reachability model.
+The low-code time log excludes cold-start cost: the first image pull failed several times, so the ~2 min setup assumes a warm cache.
+The escaping fix is assumed to cover all render paths for booking titles; only the Markdown component path was re-tested.
+"Anonymous API refused" was tested for one role; whether any non-admin authenticated role exists, and what it can do, was not tested.
+UI 8/8 for the code-based app was measured in one browser/timezone; the date logic parses datetime-local as local time, so cross-timezone behaviour is asserted, not observed.
+45/45 unit tests is treated as defect-free; it demonstrably is not (the 24:30 message defect passes the suite).
+3. Risk list with required observable evidence
+Fail-open on empty data (low-code, high). Empty prod table → "Available". To verify: on any fresh deployment, clear the table and re-run T2; a correct implementation must fail closed (error or OVERLAP, never AVAILABLE). Also test with the backend stopped.
+API writes bypass UI restrictions (low-code, high if multi-user). Admin session wrote/deleted rows despite hidden controls. To verify: create a least-privilege user, obtain its session token, attempt POST/DELETE on the Bookings API directly; confirm 403 at the server, not just a missing button.
+Injection class only partially fixed (low-code, medium). <img> rendered by Markdown; onerror stripped by sanitizer; fix applied in one binding. To verify: store <img src=x onerror=alert(1)> and <a href="javascript:alert(1)"> as a title, render through every component that displays titles (table, detail, markdown), and inspect the DOM for injected elements and any execution.
+Unversioned, opaque logic edits (low-code, medium). No git; binding base64-encoded. To verify: make a small logic edit, export the workspace, and attempt to produce a readable diff against the previous export; then restore that export on a clean instance and re-run T1–T8.
+Invalid end-time label (code-based, low). 23:30 + 60 shows "to 24:30". To verify: run that input in the UI and observe the message; add a unit assertion for the end label.
+Local-timezone dependence (both, low–medium). Code-based parses the picker value as local time; Budibase picker is set to "ignore time zones". To verify: run each app with the browser (or host) timezone set to two zones at least 6 hours apart, run T2 and T7, and compare the rendered times and results.
+Dev-dependency vulnerabilities (code-based, low). 24 audit findings in build tooling. To verify: read npm audit output and confirm none of the affected packages ship in dist/ (check the bundle or source maps); re-run after any dependency update.
+Deployment drift between dev and prod (low-code, medium). Data separation caused the fail-open incident. To verify: change a booking in dev, publish, and confirm the published app reflects the definition change but not unsynced data — and document the seeding step as mandatory.
+4. Recommendation
+
+For this scenario — one fictional room, read-only checks, no real data, no login — the code-based implementation is the one to keep. It reached the same verified correctness in about half the measured time, its logic is reviewable, diffable, and covered by 45 rerunnable tests, and its deployed footprint is a static page with no server to attack. The low-code implementation is a legitimate fast prototype, but its evidence shows the characteristic low-code risks in miniature: a fail-open production deployment, an authenticated write path the UI does not show, unversioned opaque logic, and a six-service stack to maintain. If it is retained for comparison, apply the two mandatory controls before trusting it: fail-closed behaviour on missing data and server-side role permissions on the API.
+
+Summary: I reviewed both implementations against the same contract using your test evidence and a source review of the contract code (read-only, nothing changed). The code-based app wins on correctness assurance, maintainability, portability, and measured cost; the low-code app was faster to a dev-preview pass but its real failures were deployment and authorization gaps. The highest-priority items to verify next are the fail-open-on-empty-data behaviour and the authenticated API write path on the Budibase side, plus the 24:30 label defect on the code-based side.
+

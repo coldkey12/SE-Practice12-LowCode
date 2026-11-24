@@ -1,0 +1,21 @@
+[Prompt] = P1b_fix_prompt.txt (pasted as text)
+[Bolt answer, Standard mode, Build, Version 19 at Nov 24 7:03 PM]
+
+Three fixes: a pure verdict mapping in the contract module, date-aware overlap comparison, and a full requested-range display. Starting with the contract module.
+(actions taken)
+Now the UI: use the pure verdict mapping and show the full requested range.
+(actions taken)
+Now adding the requested regression tests to the contract test file.
+(actions taken)
+All three defects are fixed, with only these changes made.
+
+D1: the verdict now comes from a pure, unit-tested function in the contract module: AVAILABLE → "Available"; ROOM_BLOCKED and OVERLAP → "Unavailable"; the five input errors → "Invalid input". An OVERLAP result no longer shows "Invalid input".
+D2: overlap checking now compares the full date and time, so a slot on 2026-12-05 no longer collides with a 2026-12-01 booking, and intervals crossing midnight (like 23:30 + 60) work correctly.
+D3: the result card now shows "Requested: 2026-12-01 13:00–14:00" with both start and end instead of only the start.
+
+Four regression tests were added (the three date cases plus the full 8-code verdict mapping); the suite went from 41 to 45 tests, all passing. Real terminal output:
+
+npm test — Test Files 2 passed (2), Tests 45 passed (45) (availability 26, contract 19).
+npm run lint — no errors.
+npm run typecheck — no errors.
+npm run build — ✓ built in 1.69s (same non-blocking caniuse-lite is outdated data warning as before; updating it would mean touching dependencies, which you excluded).

@@ -1,0 +1,11 @@
+{"runAt":"2026-11-24 18:41 local (Asia/Almaty), Budibase dev preview http://127.0.0.1:10000/app_dev_.../room-availability-checker, real clock as now",
+ "results":[
+ {"id":"T1","start":"12/1/2026 17:00","duration":"60","blocked":false,"observed":"Available | available = true | reason code = AVAILABLE — Available: Room A-101 is free from 17:00 to 18:00.","pass":true},
+ {"id":"T2","start":"12/1/2026 12:30","duration":"60","blocked":false,"observed":"Unavailable | available = false | reason code = OVERLAP — Unavailable: overlaps with \"Study group\" (12:00–13:00).","pass":true},
+ {"id":"T3","start":"12/1/2026 17:00","duration":"60","blocked":true,"observed":"Unavailable | available = false | reason code = ROOM_BLOCKED — Unavailable: the room is blocked.","pass":true},
+ {"id":"T4","start":"12/1/2026 17:00","duration":"0","blocked":false,"observed":"Invalid input | available = false | reason code = DURATION_NOT_POSITIVE — Duration must be greater than 0 minutes.","pass":true},
+ {"id":"T5","start":"12/1/2026 17:00","duration":"121","blocked":false,"observed":"Invalid input | available = false | reason code = DURATION_TOO_LONG — Duration must be at most 120 minutes.","pass":true},
+ {"id":"T6","start":"11/20/2026 10:00","duration":"60","blocked":false,"observed":"Invalid input | available = false | reason code = START_IN_PAST — Start time must be in the future.","pass":true},
+ {"id":"T7","start":"12/1/2026 13:00","duration":"120","blocked":false,"observed":"Available | available = true | reason code = AVAILABLE — Available: Room A-101 is free from 13:00 to 15:00.","pass":true},
+ {"id":"T8","observed":"Bookings table text identical before T1 and after T7 (B1 09:00-10:30, B2 12:00-13:00, B3 15:00-16:30)","pass":true}
+ ]}

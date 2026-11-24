@@ -1,0 +1,28 @@
+# Code-based (V16 baseline) static checks — 2026-11-24 18:49
+
+## Raw-HTML / eval sinks in src (XSS/injection SAST grep)
+none found
+
+## Secrets / env usage in src
+none found
+no .env files
+
+## Network calls (fetch/axios/supabase)
+none found
+
+## npm audit (production deps)
+found 0 vulnerabilities
+
+## npm audit (all deps)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+## lint / typecheck
+lint exit 0
+typecheck exit 0
+
+## npm audit summary (all deps): 24 vulnerabilities (2 low, 7 moderate, 13 high, 2 critical) — all in dev/build tooling (vite/vitest/eslint chain); production deps: 0.
